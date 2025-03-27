@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="colorPrimary">#298089</color>
+    <color name="colorPrimaryDark">#1A5276</color>
+
+
+    <color name="greenButton">#4CAF50</color> <!-- Verde accesible -->
+
+
+
+
+    <color name="colorNormal">#3F51B5</color>       <!-- Azul -->
+    <color name="colorEstudiante">#4CAF50</color>    <!-- Verde -->
+    <color name="colorTerceraEdad">#FF9800</color>   <!-- Naranja -->
+    <color name="colorPlusMinus">#9C27B0</color>     <!-- Púrpura -->
+    <color name="purple_500">#6200EE</color> <!-- Color normal del botón -->
+    <color name="purple_700">#3700B3</color> <!-- Color al presionar -->
+
+</resources>
