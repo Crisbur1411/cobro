@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Mensaje temporal de prueba
-                Toast.makeText(MainActivity.this, "Crear cuenta", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Crear cuenta Prueba", Toast.LENGTH_SHORT).show();
                 if (sonidoClick != null) {
                     sonidoClick.release();
                     sonidoClick = null;
