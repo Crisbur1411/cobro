@@ -68,11 +68,8 @@ public class CobroActivity extends AppCompatActivity {
         String token = getIntent().getStringExtra("token");
 
         // Mostrar el token en un Toast
-        Toast.makeText(this, "Token recibido: " + token, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Token Recibido: ", Toast.LENGTH_LONG).show();
 
-        // Mostrar el token en un TextView
-        tvToken = findViewById(R.id.tvToken); // Asegúrate de tener un TextView en el layout
-        tvToken.setText("Token: " + token);
 
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
         // Inicializar el TextView del estado de conexión
