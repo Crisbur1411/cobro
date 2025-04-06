@@ -20,8 +20,8 @@ import android.os.Looper;
 import android.widget.TextView;
 import android.media.MediaPlayer;
 
-
-
+import retrofit2.Call;
+import retrofit2.Response;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -129,47 +129,47 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 🔹 Mostrar diálogo de carga mientras se verifica el login
+        // Mostrar diálogo de carga
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Cargando...")
-                .setMessage("Verificando ")
+                .setMessage("Verificando credenciales")
                 .setCancelable(false);
 
         AlertDialog progressDialog = builder.create();
         progressDialog.show();
 
-        // 🔹 Simular un pequeño retraso para la carga (1.5 segundos)
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            SQLiteDatabase db = dbHelper.getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT * FROM usuarios WHERE usuarios=? AND contraseña=?", new String[]{usuario, password});
+        // Enviar petición al API
+        LoginRequest request = new LoginRequest(usuario, password);
+        ApiClient.getApiService().login(request).enqueue(new retrofit2.Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                progressDialog.dismiss();
 
-            if (cursor.moveToFirst()) {
-                Toast.makeText(this, "Login exitoso", Toast.LENGTH_SHORT).show();
+                if (response.isSuccessful() && response.body() != null) {
+                    String token = response.body().getToken();
 
-                // 🔥 Obtener la contraseña del usuario desde la base de datos
-                String contraseñaUsuario = cursor.getString(cursor.getColumnIndex("contraseña"));
+                    Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
 
 
-                // Crear Intent para abrir CobroActivity
-                Intent intent = new Intent(MainActivity.this, CobroActivity.class);
 
-                // 🔥 Enviar la contraseña como extra en el Intent
-                intent.putExtra("passwordUsuario", contraseñaUsuario);
+                    // Ir a la siguiente pantalla y enviar el token
+                    Intent intent = new Intent(MainActivity.this, CobroActivity.class);
+                    intent.putExtra("token", token);
+                    startActivity(intent);
 
-                // Iniciar la actividad de Cobro
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
+                }
             }
 
-
-
-            cursor.close();
-            db.close();
-            progressDialog.dismiss(); // Oculta el diálogo al terminar
-
-        }, 1000); // 1.5 segundos de espera
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                progressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "Error de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
 
 
 

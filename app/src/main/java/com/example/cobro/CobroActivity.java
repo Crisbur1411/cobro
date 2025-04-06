@@ -1,8 +1,10 @@
 package com.example.cobro;
 
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.widget.Button;
@@ -13,6 +15,7 @@ import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -53,10 +56,24 @@ public class CobroActivity extends AppCompatActivity {
     private String passwordUsuario; // Variable para almacenar la contraseña
     private MediaPlayer sonidoClick;
 
+    private TextView tvToken;
+
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cobro);
+
+        // Obtener el token desde el intent
+        String token = getIntent().getStringExtra("token");
+
+        // Mostrar el token en un Toast
+        Toast.makeText(this, "Token recibido: " + token, Toast.LENGTH_LONG).show();
+
+        // Mostrar el token en un TextView
+        tvToken = findViewById(R.id.tvToken); // Asegúrate de tener un TextView en el layout
+        tvToken.setText("Token: " + token);
+
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
         // Inicializar el TextView del estado de conexión
         tvEstadoConexion = findViewById(R.id.tvEstadoConexion);
@@ -64,6 +81,7 @@ public class CobroActivity extends AppCompatActivity {
         passwordUsuario = getIntent().getStringExtra("passwordUsuario");
         // Inicializar sonido al cargar la actividad
         sonidoClick = MediaPlayer.create(this, R.raw.click);
+
 
 
         // Verificar si la contraseña ya está almacenada
@@ -529,6 +547,16 @@ public class CobroActivity extends AppCompatActivity {
      */
     private void actualizarEstadoConexion() {
         if (isBluetoothConnected()) {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
             tvEstadoConexion.setText("✅ Conectado con:\n" + Bluetooth.bluetoothSocket.getRemoteDevice().getName());
             tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {

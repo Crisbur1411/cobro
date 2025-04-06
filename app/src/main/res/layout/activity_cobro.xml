@@ -196,4 +196,14 @@
         app:layout_constraintStart_toStartOf="parent" />
 
 
+    <TextView
+        android:id="@+id/tvToken"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="Token aparecerá aquí"
+        android:textSize="16sp"
+        tools:layout_editor_absoluteX="-2dp"
+        tools:layout_editor_absoluteY="672dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
