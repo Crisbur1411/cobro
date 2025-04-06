@@ -77,12 +77,12 @@ public class CobroActivity extends AppCompatActivity {
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
         // Inicializar el TextView del estado de conexión
         tvEstadoConexion = findViewById(R.id.tvEstadoConexion);
-        // 🔥 Obtener la contraseña enviada desde MainActivity
-        passwordUsuario = getIntent().getStringExtra("passwordUsuario");
+
         // Inicializar sonido al cargar la actividad
         sonidoClick = MediaPlayer.create(this, R.raw.click);
 
-
+        // 🔥 Obtener la contraseña enviada desde MainActivity
+        passwordUsuario = getIntent().getStringExtra("passwordUsuario");
 
         // Verificar si la contraseña ya está almacenada
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);

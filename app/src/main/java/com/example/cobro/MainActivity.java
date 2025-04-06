@@ -1,6 +1,7 @@
 package com.example.cobro;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -148,15 +149,18 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     String token = response.body().getToken();
 
+                    // 🔐 Guardar contraseña de forma permanente
+                    SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("passwordUsuario", password);  // Guarda la contraseña ingresada
+                    editor.apply();
+
                     Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
-
-
 
                     // Ir a la siguiente pantalla y enviar el token
                     Intent intent = new Intent(MainActivity.this, CobroActivity.class);
                     intent.putExtra("token", token);
                     startActivity(intent);
-
                 } else {
                     Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
                 }
