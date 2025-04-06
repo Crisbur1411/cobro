@@ -147,12 +147,13 @@ public class MainActivity extends AppCompatActivity {
                 progressDialog.dismiss();
 
                 if (response.isSuccessful() && response.body() != null) {
-                    String token = response.body().getToken();
+                    String token = response.body().getData().getAccessToken(); // ✅ Correcto ahora
 
-                    // 🔐 Guardar contraseña de forma permanente
+                    // 🔐 Guardar contraseña y token de forma permanente
                     SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("passwordUsuario", password);  // Guarda la contraseña ingresada
+                    editor.putString("authToken", token);           // Guarda el token
                     editor.apply();
 
                     Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
