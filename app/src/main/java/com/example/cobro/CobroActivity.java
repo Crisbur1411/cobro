@@ -68,7 +68,7 @@ public class CobroActivity extends AppCompatActivity {
         String token = getIntent().getStringExtra("token");
 
         // Mostrar el token en un Toast
-        Toast.makeText(this, "Token Recibido: ", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Token Recibido: "+ token, Toast.LENGTH_LONG).show();
 
 
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
