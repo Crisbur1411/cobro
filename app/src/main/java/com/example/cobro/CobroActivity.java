@@ -21,11 +21,17 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import android.media.MediaPlayer;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class CobroActivity extends AppCompatActivity {
@@ -64,11 +70,6 @@ public class CobroActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cobro);
 
-        // Obtener el token desde el intent
-        String token = getIntent().getStringExtra("token");
-
-        // Mostrar el token en un Toast
-        Toast.makeText(this, "Token Recibido: "+ token, Toast.LENGTH_LONG).show();
 
 
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
@@ -288,6 +289,52 @@ public class CobroActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Error al guardar el corte parcial", Toast.LENGTH_SHORT).show();
                 }
+
+                // 1. Preparamos los datos de las ventas
+                List<SaleItem> ventas = new ArrayList<>();
+                if (pasajerosNormal > 0)
+                    ventas.add(new SaleItem(1, pasajerosNormal, (int) (totalNormal / pasajerosNormal))); // route_fare_id = 1
+                if (pasajerosEstudiante > 0)
+                    ventas.add(new SaleItem(2, pasajerosEstudiante, (int) (totalEstudiante / pasajerosEstudiante))); // route_fare_id = 2
+                if (pasajerosTercera > 0)
+                    ventas.add(new SaleItem(3, pasajerosTercera, (int) (totalTercera / pasajerosTercera))); // route_fare_id = 3
+
+                // 2. Obtenemos la hora actual
+                String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+                // 3. Construimos el objeto del request
+                PartialCutRequest corteRequest = new PartialCutRequest(
+                        "MAC00001", // Usa el identificador real del dispositivo si es dinámico
+                        timestamp,
+                        "partial",
+                        ventas
+                );
+
+                // 4. Obtenemos el token desde SharedPreferences
+                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                String token = prefs.getString("accessToken", null); // 👈 Asegúrate de haberlo guardado antes
+
+                // 5. Enviar al backend si hay token
+                if (token != null) {
+                    ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(CobroActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(CobroActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Toast.makeText(CobroActivity.this, "Fallo de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    Toast.makeText(CobroActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
+                }
+
             });
         });
 

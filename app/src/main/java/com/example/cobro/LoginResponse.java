@@ -54,7 +54,7 @@ public class LoginResponse {
         private String phone;
         private String deleted_at;
 
-        // Getters para cada uno de estos campos si los necesitas
+        // Getters para cada uno de estos campos si se necesitan
         public String getName() {
             return name;
         }

@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -153,8 +154,9 @@ public class MainActivity extends AppCompatActivity {
                     SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putString("passwordUsuario", password);  // Guarda la contraseña ingresada
-                    editor.putString("authToken", token);           // Guarda el token
+                    editor.putString("accessToken", token);           // Guarda el token
                     editor.apply();
+                    Log.d("TOKEN_DEBUG", "Token guardado: " + token);
 
                     Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
 
