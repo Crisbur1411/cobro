@@ -1,16 +1,38 @@
 package com.example.cobro;
 
-import com.google.gson.annotations.SerializedName;
-
 public class SaleItem {
-    @SerializedName("route_fare_id")
-    private int routeFareId;
+    private int route_fare_id;
     private int quantity;
-    private float price;
+    private int price;
 
-    public SaleItem(int routeFareId, int quantity, float price) {
-        this.routeFareId = routeFareId;
+    public SaleItem(int route_fare_id, int quantity, int price) {
+        this.route_fare_id = route_fare_id;
         this.quantity = quantity;
+        this.price = price;
+    }
+
+    // Getters y Setters
+    public int getRoute_fare_id() {
+        return route_fare_id;
+    }
+
+    public void setRoute_fare_id(int route_fare_id) {
+        this.route_fare_id = route_fare_id;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
         this.price = price;
     }
 }

@@ -29,6 +29,9 @@ import java.util.Locale;
 import java.util.Map;
 import android.media.MediaPlayer;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -313,6 +316,20 @@ public class CobroActivity extends AppCompatActivity {
                 // 4. Obtenemos el token desde SharedPreferences
                 SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                 String token = prefs.getString("accessToken", null); // 👈 Asegúrate de haberlo guardado antes
+
+
+                //Mostrar Json de prueba
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String jsonCorte = gson.toJson(corteRequest);
+
+
+                // Mostrar en un AlertDialog
+                new AlertDialog.Builder(CobroActivity.this)
+                        .setTitle("JSON que se enviará")
+                        .setMessage(jsonCorte)
+                        .setPositiveButton("OK", null)
+                        .show();
+                //---------------
 
                 // 5. Enviar al backend si hay token
                 if (token != null) {
