@@ -305,6 +305,15 @@ public class CobroActivity extends AppCompatActivity {
                 // 2. Obtenemos la hora actual
                 String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
+                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                String userPhone = prefs.getString("telefonoUsuario", "1234567890"); // Usa tu clave real
+
+                // Guardar en DB local los detalles del corte
+                for (SaleItem venta : ventas) {
+                    double total = venta.getQuantity() * venta.getPrice(); // precio total de esa línea
+                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), total);
+                }
+
                 // 3. Construimos el objeto del request
                 PartialCutRequest corteRequest = new PartialCutRequest(
                         "MAC00001", // Usa el identificador real del dispositivo si es dinámico
@@ -315,7 +324,6 @@ public class CobroActivity extends AppCompatActivity {
                 );
 
                 // 4. Obtenemos el token desde SharedPreferences
-                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                 String token = prefs.getString("accessToken", null); // 👈 Asegúrate de haberlo guardado antes
 
 

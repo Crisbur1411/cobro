@@ -26,6 +26,19 @@ public class control_cortes extends SQLiteOpenHelper {
                     "total_tercera_edad REAL, " +
                     "fecha_hora TEXT);";
 
+
+    //Tabla para detalles de corte parcial
+    private static final String TABLE_CREATE_CORTE_DETALLE =
+            "CREATE TABLE cortes_detalle (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "user TEXT, " +
+                    "timestamp TEXT, " +
+                    "route_fare_id INTEGER, " +
+                    "quantity INTEGER, " +
+                    "price REAL);";
+
+
+
     public control_cortes(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -33,6 +46,7 @@ public class control_cortes extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(TABLE_CREATE);
+        db.execSQL(TABLE_CREATE_CORTE_DETALLE);
     }
 
     @Override
@@ -97,5 +111,16 @@ public class control_cortes extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DELETE FROM cortes");
         db.close();
+    }
+    //Guardar detalles del corte parcial
+    public void guardarDetalleCorte(String user, String timestamp, int routeFareId, int quantity, double price) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("user", user);
+        values.put("timestamp", timestamp);
+        values.put("route_fare_id", routeFareId);
+        values.put("quantity", quantity);
+        values.put("price", price);
+        db.insert("cortes_detalle", null, values);
     }
 }

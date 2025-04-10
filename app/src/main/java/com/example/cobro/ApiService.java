@@ -17,4 +17,8 @@ public interface ApiService {
             @Header("Authorization") String authHeader,
             @Body PartialCutRequest request
     );
+
+    @POST("driver/report/create")
+    Call<Void> enviarCorteTotal(@Header("Authorization") String token, @Body FinalCutRequest finalCut);
+
 }

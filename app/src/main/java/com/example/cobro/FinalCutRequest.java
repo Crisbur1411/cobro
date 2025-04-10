@@ -2,13 +2,13 @@ package com.example.cobro;
 
 import java.util.List;
 
-public class FinalCorteRequest {
+public class FinalCutRequest {
     private String device_identifier;
     private String timestamp;
     private String type;
     private List<Report> reports;
 
-    public FinalCorteRequest(String device_identifier, String timestamp, List<Report> reports) {
+    public FinalCutRequest(String device_identifier, String timestamp, List<Report> reports) {
         this.device_identifier = device_identifier;
         this.timestamp = timestamp;
         this.type = "final";
