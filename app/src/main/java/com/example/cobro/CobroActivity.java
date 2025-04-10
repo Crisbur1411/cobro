@@ -314,6 +314,30 @@ public class CobroActivity extends AppCompatActivity {
                     dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), total);
                 }
 
+                // Guardar en DB local los detalles del corte
+                StringBuilder resumenGuardado = new StringBuilder();
+                resumenGuardado.append("Datos guardados localmente:\n\n");
+
+                for (SaleItem venta : ventas) {
+                    double total = venta.getQuantity() * venta.getPrice(); // precio total de esa línea
+                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), total);
+
+                    // Agregar a resumen
+                    resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
+                            .append("Fecha: ").append(timestamp).append("\n")
+                            .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
+                            .append("Cantidad: ").append(venta.getQuantity()).append("\n")
+                            .append("Precio Total: $").append(total).append("\n\n");
+                }
+
+// Mostrar los datos guardados en un AlertDialog
+                new AlertDialog.Builder(CobroActivity.this)
+                        .setTitle("Corte Parcial Guardado")
+                        .setMessage(resumenGuardado.toString())
+                        .setPositiveButton("OK", null)
+                        .show();
+
+
                 // 3. Construimos el objeto del request
                 PartialCutRequest corteRequest = new PartialCutRequest(
                         "MAC00001", // Usa el identificador real del dispositivo si es dinámico

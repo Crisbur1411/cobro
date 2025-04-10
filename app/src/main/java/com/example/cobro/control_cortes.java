@@ -29,7 +29,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
     //Tabla para detalles de corte parcial
     private static final String TABLE_CREATE_CORTE_DETALLE =
-            "CREATE TABLE cortes_detalle (" +
+            "CREATE TABLE DetalleCorteParcial (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "user TEXT, " +
                     "timestamp TEXT, " +
@@ -113,7 +113,7 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
     //Guardar detalles del corte parcial
-    public void guardarDetalleCorte(String user, String timestamp, int routeFareId, int quantity, double price) {
+    public long guardarDetalleCorte(String user, String timestamp, int routeFareId, int quantity, double price) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("user", user);
@@ -121,6 +121,8 @@ public class control_cortes extends SQLiteOpenHelper {
         values.put("route_fare_id", routeFareId);
         values.put("quantity", quantity);
         values.put("price", price);
-        db.insert("cortes_detalle", null, values);
+
+        return db.insert("DetalleCorteParcial", null, values);
     }
+
 }
