@@ -310,6 +310,7 @@ public class CobroActivity extends AppCompatActivity {
                         "MAC00001", // Usa el identificador real del dispositivo si es dinámico
                         timestamp,
                         "partial",
+                        "1234567890",
                         ventas
                 );
 
