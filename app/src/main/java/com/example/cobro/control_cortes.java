@@ -145,14 +145,14 @@ public class control_cortes extends SQLiteOpenHelper {
                     int routeFareId = cursor.getInt(cursor.getColumnIndexOrThrow("route_fare_id"));
                     int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
                     double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
-                    double total = quantity * price;
+
 
                     String detalle = "Usuario: " + user + "\n"
                             + "Fecha: " + timestamp + "\n"
                             + "ID Tarifa: " + routeFareId + "\n"
                             + "Cantidad: " + quantity + "\n"
-                            + "Precio Unitario: $" + price + "\n"
-                            + "Total: $" + total + "\n";
+                            + "Precio Unitario: $" + price + "\n";
+
 
                     cortes.add(detalle);
                 } while (cursor.moveToNext());

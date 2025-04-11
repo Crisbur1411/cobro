@@ -314,15 +314,13 @@ public class CobroActivity extends AppCompatActivity {
                 resumenGuardado.append("Datos guardados localmente:\n\n");
 
                 for (SaleItem venta : ventas) {
-                    double total = venta.getQuantity() * venta.getPrice(); // precio total de esa línea
                     dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice());
 
                     // Agregar a resumen
                     resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
                             .append("Fecha: ").append(timestamp).append("\n")
                             .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
-                            .append("Cantidad: ").append(venta.getQuantity()).append("\n")
-                            .append("Precio Total: $").append(total).append("\n\n");
+                            .append("Cantidad: ").append(venta.getQuantity()).append("\n\n");
                 }
 
                 // Mostrar los datos guardados en un AlertDialog
