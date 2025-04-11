@@ -308,11 +308,6 @@ public class CobroActivity extends AppCompatActivity {
                 SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                 String userPhone = prefs.getString("telefonoUsuario", "1234567890"); // Usa tu clave real
 
-                // Guardar en DB local los detalles del corte
-                for (SaleItem venta : ventas) {
-                    double total = venta.getQuantity() * venta.getPrice(); // precio total de esa línea
-                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), total);
-                }
 
                 // Guardar en DB local los detalles del corte
                 StringBuilder resumenGuardado = new StringBuilder();
@@ -320,7 +315,7 @@ public class CobroActivity extends AppCompatActivity {
 
                 for (SaleItem venta : ventas) {
                     double total = venta.getQuantity() * venta.getPrice(); // precio total de esa línea
-                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), total);
+                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice());
 
                     // Agregar a resumen
                     resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
@@ -330,7 +325,7 @@ public class CobroActivity extends AppCompatActivity {
                             .append("Precio Total: $").append(total).append("\n\n");
                 }
 
-// Mostrar los datos guardados en un AlertDialog
+                // Mostrar los datos guardados en un AlertDialog
                 new AlertDialog.Builder(CobroActivity.this)
                         .setTitle("Corte Parcial Guardado")
                         .setMessage(resumenGuardado.toString())
@@ -362,7 +357,23 @@ public class CobroActivity extends AppCompatActivity {
                         .setMessage(jsonCorte)
                         .setPositiveButton("OK", null)
                         .show();
-                //---------------
+                //-----------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 // 5. Enviar al backend si hay token
                 if (token != null) {
@@ -425,11 +436,37 @@ public class CobroActivity extends AppCompatActivity {
                     contenido.append("Total Recaudado: $").append(totalRecaudado);
 
                     showTextDialog("Corte Total", contenido.toString());
+
+
+
+
+
+
+                    //Muestra de todos los cortes parciales almacenados
+
+                    List<String> cortes = dbHelper.obtenerTodosLosCortesParciales();
+                    StringBuilder resumen = new StringBuilder();
+
+                    for (String corte : cortes) {
+                        resumen.append(corte).append("\n----------------\n");
+                    }
+
+                    new AlertDialog.Builder(CobroActivity.this)
+                            .setTitle("Historial de Cortes Parciales")
+                            .setMessage(resumen.toString())
+                            .setPositiveButton("OK", null)
+                            .show();
+                    //----------------------------------------------------
+
+
+
+
                     printTicket(contenido.toString());
                 } else {
                     Toast.makeText(this, "No hay cortes registrados en la BD", Toast.LENGTH_SHORT).show();
                 }
                 dbHelper.borrarCortes(); // Reinicia los cortes
+                dbHelper.borrarDetallesCortes();
                 Toast.makeText(this, "Se reiniciaron los cortes parciales para el día.", Toast.LENGTH_SHORT).show();
             });
         });
