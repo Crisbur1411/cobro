@@ -6,12 +6,14 @@ public class PartialCutRequest {
     private String device_identifier;
     private String timestamp;
     private String type;
+    private String user;
     private List<SaleItem> sales;
 
-    public PartialCutRequest(String device_identifier, String timestamp, String type, List<SaleItem> sales) {
+    public PartialCutRequest(String device_identifier, String timestamp, String type, String user, List<SaleItem> sales) {
         this.device_identifier = device_identifier;
         this.timestamp = timestamp;
         this.type = type;
+        this.user = user;
         this.sales = sales;
     }
 
@@ -34,6 +36,10 @@ public class PartialCutRequest {
 
     public String getType() {
         return type;
+    }
+
+    public void setUser(String user){
+        this.user = user;
     }
 
     public void setType(String type) {

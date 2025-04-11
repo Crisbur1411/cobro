@@ -17,4 +17,6 @@ public interface ApiService {
             @Header("Authorization") String authHeader,
             @Body PartialCutRequest request
     );
+
+    Call<Void> enviarCorteTotal(String s, FinalCorteRequest finalCorteRequest);
 }
