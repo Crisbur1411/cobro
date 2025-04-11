@@ -63,16 +63,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Mensaje temporal de prueba
                 Toast.makeText(MainActivity.this, "Crear cuenta", Toast.LENGTH_SHORT).show();
-                if (sonidoClick != null) {
-                    sonidoClick.release();
-                    sonidoClick = null;
-                }
-
-                // 🎵 Volver a crear el MediaPlayer antes de reproducir
-                sonidoClick = MediaPlayer.create(MainActivity.this, R.raw.click);
-                if (sonidoClick != null) {
-                    sonidoClick.start();  // 🎧 Reproducir sonido
-                }
+                // Llamamos al metodo para reproducir Sonido
+                reproducirSonidoClick();
                 // Si tienes una pantalla de registro, ábrela
                 Intent intent = new Intent(MainActivity.this, crearActivity.class);
                 startActivity(intent);
@@ -82,17 +74,8 @@ public class MainActivity extends AppCompatActivity {
         btnIngresar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 🔥 Liberar el sonido antes de volver a crearlo
-                if (sonidoClick != null) {
-                    sonidoClick.release();
-                    sonidoClick = null;
-                }
-
-                // 🎵 Volver a crear el MediaPlayer antes de reproducir
-                sonidoClick = MediaPlayer.create(MainActivity.this, R.raw.click);
-                if (sonidoClick != null) {
-                    sonidoClick.start();  // 🎧 Reproducir sonido
-                }
+                // Llamamos al metodo para reproducir Sonido
+                reproducirSonidoClick();
 
                 // ✅ Llamar a la función de validación
                 validarLogin();
@@ -101,15 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    //Libera espacio en la memoria despues de los sonidos
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (sonidoClick != null) {
-            sonidoClick.release();
-            sonidoClick = null;
-        }
-    }
+
 
 
 
@@ -177,7 +152,16 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-
+    private void reproducirSonidoClick() {
+        if (sonidoClick != null) {
+            sonidoClick.release();
+            sonidoClick = null;
+        }
+        sonidoClick = MediaPlayer.create(MainActivity.this, R.raw.click);
+        if (sonidoClick != null) {
+            sonidoClick.start();
+        }
+    }
 
 
 }

@@ -126,17 +126,8 @@ public class CobroActivity extends AppCompatActivity {
 
         //Boton para realizar conexión
         btnBluetooth.setOnClickListener(v -> {
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
             solicitarPassword("Realizar la conexión Bluetooth", () -> {
                 // Iniciar actividad para Bluetooth si la contraseña es correcta
                 Intent intent = new Intent(CobroActivity.this, Bluetooth.class);
@@ -158,17 +149,8 @@ public class CobroActivity extends AppCompatActivity {
         btnMas.setOnClickListener(v -> {
             contador++;
             tvNumero.setText(String.valueOf(contador));
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
         });
 
         btnMenos.setOnClickListener(v -> {
@@ -176,17 +158,8 @@ public class CobroActivity extends AppCompatActivity {
                 contador--;
                 tvNumero.setText(String.valueOf(contador));
             }
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
         });
 
         // Venta individual: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
@@ -194,66 +167,32 @@ public class CobroActivity extends AppCompatActivity {
             generateSingleTicketText("Tercera Edad", contador);
             acumularVenta("Tercera Edad", PRECIO_TERCERA_EDAD);
             resetCounter();
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
         });
 
         btnPasajeNormal.setOnClickListener(v -> {
             generateSingleTicketText("Pasaje Normal", contador);
             acumularVenta("Pasaje Normal", PRECIO_NORMAL);
             resetCounter();
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
 
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
         });
 
         btnEstudiante.setOnClickListener(v -> {
             generateSingleTicketText("Estudiante", contador);
             acumularVenta("Estudiante", PRECIO_ESTUDIANTE);
             resetCounter();
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
         });
 
         // Corte Parcial: muestra el ticket generado con los totales acumulados
         btnCorteParcial.setOnClickListener(v -> {
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
 
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
             solicitarPassword("realizar el Corte Parcial", () -> {
                 int pasajerosNormal = pasajerosPorTipo.get("Pasaje Normal");
                 int pasajerosEstudiante = pasajerosPorTipo.get("Estudiante");
@@ -357,22 +296,6 @@ public class CobroActivity extends AppCompatActivity {
                         .show();
                 //-----------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 // 5. Enviar al backend si hay token
                 if (token != null) {
                     ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
@@ -401,17 +324,8 @@ public class CobroActivity extends AppCompatActivity {
 
         // Corte Total: consulta la BD y muestra el ticket generado con el resumen de todos los cortes parciales
         btnCorteTotal.setOnClickListener(v -> {
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
             solicitarPassword("realizar el Corte Total", () -> {
                 Cursor cursor = dbHelper.getResumenCortes();
                 if (cursor != null && cursor.moveToFirst()) {
@@ -470,6 +384,18 @@ public class CobroActivity extends AppCompatActivity {
         });
 
     }
+
+    private void reproducirSonidoClick() {
+        if (sonidoClick != null) {
+            sonidoClick.release();
+            sonidoClick = null;
+        }
+        sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
+        if (sonidoClick != null) {
+            sonidoClick.start();
+        }
+    }
+
 
     //Libera espacio en la memoria despues de los sonidos
     @Override
