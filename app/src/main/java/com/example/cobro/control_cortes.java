@@ -16,7 +16,7 @@ import java.util.Locale;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
@@ -39,7 +39,8 @@ public class control_cortes extends SQLiteOpenHelper {
                     "timestamp TEXT, " +
                     "route_fare_id INTEGER, " +
                     "quantity INTEGER, " +
-                    "price REAL);";
+                    "price REAL," +
+                    "status INTEGER);";
 
 
 
@@ -118,7 +119,7 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
     //Guardar detalles del corte parcial
-    public long guardarDetalleCorte(String user, String timestamp, int routeFareId, int quantity, double price) {
+    public long guardarDetalleCorte(String user, String timestamp, int routeFareId, int quantity, double price, int status) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("user", user);
@@ -126,6 +127,7 @@ public class control_cortes extends SQLiteOpenHelper {
         values.put("route_fare_id", routeFareId);
         values.put("quantity", quantity);
         values.put("price", price);
+        values.put("status", status);
 
         return db.insert("DetalleCorteParcial", null, values);
     }
@@ -145,13 +147,15 @@ public class control_cortes extends SQLiteOpenHelper {
                     int routeFareId = cursor.getInt(cursor.getColumnIndexOrThrow("route_fare_id"));
                     int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
                     double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
+                    int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
 
 
                     String detalle = "Usuario: " + user + "\n"
                             + "Fecha: " + timestamp + "\n"
                             + "ID Tarifa: " + routeFareId + "\n"
                             + "Cantidad: " + quantity + "\n"
-                            + "Precio Unitario: $" + price + "\n";
+                            + "Precio Unitario: $" + price + "\n"
+                            + "Status: " + status + "\n";
 
 
                     cortes.add(detalle);

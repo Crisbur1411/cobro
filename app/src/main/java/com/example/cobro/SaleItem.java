@@ -16,23 +16,14 @@ public class SaleItem {
         return route_fare_id;
     }
 
-    public void setRoute_fare_id(int route_fare_id) {
-        this.route_fare_id = route_fare_id;
-    }
 
     public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
 
     public int getPrice() {
         return price;
     }
 
-    public void setPrice(int price) {
-        this.price = price;
-    }
 }

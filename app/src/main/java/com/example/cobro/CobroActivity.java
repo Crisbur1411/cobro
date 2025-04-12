@@ -246,20 +246,21 @@ public class CobroActivity extends AppCompatActivity {
 
                 SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                 String userPhone = prefs.getString("telefonoUsuario", "1234567890"); // Usa tu clave real
-
+                Integer status = prefs.getInt("status", 1);
 
                 // Guardar en DB local los detalles del corte
                 StringBuilder resumenGuardado = new StringBuilder();
                 resumenGuardado.append("Datos guardados localmente:\n\n");
 
                 for (SaleItem venta : ventas) {
-                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice());
+                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
 
                     // Agregar a resumen
                     resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
                             .append("Fecha: ").append(timestamp).append("\n")
                             .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
-                            .append("Cantidad: ").append(venta.getQuantity()).append("\n\n");
+                            .append("Cantidad: ").append(venta.getQuantity()).append("\n")
+                            .append("Status: ").append(status).append("\n\n");
                 }
 
                 // Mostrar los datos guardados en un AlertDialog
