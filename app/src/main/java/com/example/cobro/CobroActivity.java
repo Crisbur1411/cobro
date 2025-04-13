@@ -32,6 +32,12 @@ import android.media.MediaPlayer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -351,25 +357,63 @@ public class CobroActivity extends AppCompatActivity {
                     showTextDialog("Corte Total", contenido.toString());
 
 
+                    String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
+                    String timestampFinal = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+                    JSONObject finalReportJson = new JSONObject();
+                    try {
+                        finalReportJson.put("device_identifier", "MAC00001");
+                        finalReportJson.put("timestamp", timestampFinal);
+                        finalReportJson.put("type", "final");
+                        finalReportJson.put("user", telefonoUsuario);
+
+                        // Convertimos la lista de JSONObject en un JSONArray
+                        List<JSONObject> cortesParciales = dbHelper.obtenerTodosLosCortesParcialesEstructurado();
+                        JSONArray cortesArray = new JSONArray(cortesParciales);
+
+                        finalReportJson.put("reports", cortesArray);
+
+                        // Mostrar en AlertDialog por ejemplo
+                        new AlertDialog.Builder(CobroActivity.this)
+                                .setTitle("JSON Final")
+                                .setMessage(finalReportJson.toString(2)) // Pretty print con indentación de 2 espacios
+                                .setPositiveButton("OK", null)
+                                .show();
+
+                        // Aquí convertimos el JSON a RequestBody y lo enviamos
+                        RequestBody body = RequestBody.create(
+                                MediaType.parse("application/json; charset=utf-8"),
+                                finalReportJson.toString()
+                                                );
+                        //Se declara prefs para obtener el token
+                        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                        String token = prefs.getString("accessToken", null); // 👈 Asegúrate de haberlo guardado antes
 
 
+                        // Enviar al backend si hay token
+                        if (token != null) {
+                            ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
+                                @Override
+                                public void onResponse(Call<Void> call, Response<Void> response) {
+                                    if (response.isSuccessful()) {
+                                        Toast.makeText(CobroActivity.this, "Corte TOTAL enviado al servidor", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(CobroActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
+                                    }
+                                }
 
+                                @Override
+                                public void onFailure(Call<Void> call, Throwable t) {
+                                    Toast.makeText(CobroActivity.this, "Fallo de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } else {
+                            Toast.makeText(CobroActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
+                        }
 
-                    //Muestra de todos los cortes parciales almacenados
-
-                    List<String> cortes = dbHelper.obtenerTodosLosCortesParciales();
-                    StringBuilder resumen = new StringBuilder();
-
-                    for (String corte : cortes) {
-                        resumen.append(corte).append("\n----------------\n");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-
-                    new AlertDialog.Builder(CobroActivity.this)
-                            .setTitle("Historial de Cortes Parciales")
-                            .setMessage(resumen.toString())
-                            .setPositiveButton("OK", null)
-                            .show();
-                    //----------------------------------------------------
 
 
 

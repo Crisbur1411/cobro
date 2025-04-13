@@ -1,5 +1,6 @@
 package com.example.cobro;
 
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.Header;
@@ -19,6 +20,8 @@ public interface ApiService {
     );
 
     @POST("driver/report/create")
-    Call<Void> enviarCorteTotal(@Header("Authorization") String token, @Body FinalCutRequest finalCut);
+    Call<Void> enviarCorteTotal(
+            @Header("Authorization") String authHeader,
+            @Body RequestBody body);
 
 }

@@ -7,11 +7,16 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class control_cortes extends SQLiteOpenHelper {
 
@@ -132,13 +137,18 @@ public class control_cortes extends SQLiteOpenHelper {
         return db.insert("DetalleCorteParcial", null, values);
     }
 
-    public List<String> obtenerTodosLosCortesParciales() {
-        List<String> cortes = new ArrayList<>();
+
+    //Obtener todos los cortes parciales y estructurarlos en formato json
+    public List<JSONObject> obtenerTodosLosCortesParcialesEstructurado() {
+        List<JSONObject> cortesEstructurados = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
         try {
             String query = "SELECT * FROM DetalleCorteParcial ORDER BY timestamp DESC";
             Cursor cursor = db.rawQuery(query, null);
+
+            // Usamos un mapa para agrupar por usuario + timestamp
+            Map<String, JSONObject> mapaCortes = new LinkedHashMap<>();
 
             if (cursor.moveToFirst()) {
                 do {
@@ -147,28 +157,43 @@ public class control_cortes extends SQLiteOpenHelper {
                     int routeFareId = cursor.getInt(cursor.getColumnIndexOrThrow("route_fare_id"));
                     int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
                     double price = cursor.getDouble(cursor.getColumnIndexOrThrow("price"));
-                    int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
 
+                    String clave = user + "_" + timestamp;
 
-                    String detalle = "Usuario: " + user + "\n"
-                            + "Fecha: " + timestamp + "\n"
-                            + "ID Tarifa: " + routeFareId + "\n"
-                            + "Cantidad: " + quantity + "\n"
-                            + "Precio Unitario: $" + price + "\n"
-                            + "Status: " + status + "\n";
+                    // Si no existe el objeto base aún, lo creamos
+                    if (!mapaCortes.containsKey(clave)) {
+                        JSONObject corte = new JSONObject();
+                        corte.put("user", user);
+                        corte.put("timestamp", timestamp);
+                        corte.put("sales", new JSONArray());
+                        mapaCortes.put(clave, corte);
+                    }
 
+                    // Añadimos la venta a la lista de sales
+                    JSONObject venta = new JSONObject();
+                    venta.put("route_fare_id", routeFareId);
+                    venta.put("quantity", quantity);
+                    venta.put("price", (int) price); // Cast si quieres enteros
 
-                    cortes.add(detalle);
+                    // Insertar venta en el array correspondiente
+                    JSONArray ventas = mapaCortes.get(clave).getJSONArray("sales");
+                    ventas.put(venta);
+
                 } while (cursor.moveToNext());
             }
 
             cursor.close();
+
+            // Agregamos todos los objetos al resultado final
+            cortesEstructurados.addAll(mapaCortes.values());
+
         } catch (Exception e) {
-            Log.e("DB", "Error al obtener los cortes parciales", e);
+            Log.e("DB", "Error al obtener los cortes parciales estructurados", e);
         }
 
-        return cortes;
+        return cortesEstructurados;
     }
+
 
     public void borrarDetallesCortes() {
         SQLiteDatabase db = this.getWritableDatabase();
