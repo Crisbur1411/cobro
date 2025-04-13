@@ -144,7 +144,7 @@ public class control_cortes extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
 
         try {
-            String query = "SELECT * FROM DetalleCorteParcial ORDER BY timestamp DESC";
+            String query = "SELECT * FROM DetalleCorteParcial WHERE status = 1 ORDER BY timestamp DESC";
             Cursor cursor = db.rawQuery(query, null);
 
             // Usamos un mapa para agrupar por usuario + timestamp
@@ -194,12 +194,25 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortesEstructurados;
     }
 
+    public void actualizarEstatusDetalleCorte(int nuevoStatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", nuevoStatus);
+        // Solo actualiza los que están en estatus 1 (pendientes)
+        db.update("DetalleCorteParcial", values, "status = ?", new String[]{"1"});
+        db.close();
+    }
 
+
+    /*
+    // Metodo para borrar los detalles de cortes
     public void borrarDetallesCortes() {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DELETE FROM DetalleCorteParcial");
         db.close();
     }
+
+     */
 
 
 }

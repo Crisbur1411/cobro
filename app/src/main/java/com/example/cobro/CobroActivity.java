@@ -397,6 +397,8 @@ public class CobroActivity extends AppCompatActivity {
                                 public void onResponse(Call<Void> call, Response<Void> response) {
                                     if (response.isSuccessful()) {
                                         Toast.makeText(CobroActivity.this, "Corte TOTAL enviado al servidor", Toast.LENGTH_SHORT).show();
+                                        // 👇 Cambia estatus a 2 los que se enviaron
+                                        dbHelper.actualizarEstatusDetalleCorte(2);
                                     } else {
                                         Toast.makeText(CobroActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
                                     }
@@ -404,7 +406,7 @@ public class CobroActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onFailure(Call<Void> call, Throwable t) {
-                                    Toast.makeText(CobroActivity.this, "Fallo de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(CobroActivity.this, "Fallo de red. Los cortes parciales se enviarán cuando la red esté disponible", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         } else {
@@ -423,7 +425,6 @@ public class CobroActivity extends AppCompatActivity {
                     Toast.makeText(this, "No hay cortes registrados en la BD", Toast.LENGTH_SHORT).show();
                 }
                 dbHelper.borrarCortes(); // Reinicia los cortes
-                dbHelper.borrarDetallesCortes();
                 Toast.makeText(this, "Se reiniciaron los cortes parciales para el día.", Toast.LENGTH_SHORT).show();
             });
         });
@@ -648,13 +649,7 @@ public class CobroActivity extends AppCompatActivity {
     private void actualizarEstadoConexion() {
         if (isBluetoothConnected()) {
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
+
                 return;
             }
             tvEstadoConexion.setText("✅ Conectado con:\n" + Bluetooth.bluetoothSocket.getRemoteDevice().getName());
