@@ -70,7 +70,7 @@ public class CobroActivity extends AppCompatActivity {
     private TextView tvEstadoConexion;
     private String passwordUsuario; // Variable para almacenar la contraseña
     private MediaPlayer sonidoClick;
-
+    private Button btnCorteNoEnviado;
     private TextView tvToken;
 
     @SuppressLint("MissingInflatedId")
@@ -252,29 +252,7 @@ public class CobroActivity extends AppCompatActivity {
 
                 SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                 String userPhone = prefs.getString("telefonoUsuario", "1234567890"); // Usa tu clave real
-                Integer status = prefs.getInt("status", 1);
 
-                // Guardar en DB local los detalles del corte
-                StringBuilder resumenGuardado = new StringBuilder();
-                resumenGuardado.append("Datos guardados localmente:\n\n");
-
-                for (SaleItem venta : ventas) {
-                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
-
-                    // Agregar a resumen
-                    resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
-                            .append("Fecha: ").append(timestamp).append("\n")
-                            .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
-                            .append("Cantidad: ").append(venta.getQuantity()).append("\n")
-                            .append("Status: ").append(status).append("\n\n");
-                }
-
-                // Mostrar los datos guardados en un AlertDialog
-                new AlertDialog.Builder(CobroActivity.this)
-                        .setTitle("Corte Parcial Guardado")
-                        .setMessage(resumenGuardado.toString())
-                        .setPositiveButton("OK", null)
-                        .show();
 
 
                 // 3. Construimos el objeto del request
@@ -310,16 +288,43 @@ public class CobroActivity extends AppCompatActivity {
                         public void onResponse(Call<Void> call, Response<Void> response) {
                             if (response.isSuccessful()) {
                                 Toast.makeText(CobroActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
+
+                                // ✅ Guardamos los detalles con status 1 (éxito)
+                                StringBuilder resumenGuardado = new StringBuilder();
+                                resumenGuardado.append("Datos guardados localmente:\n\n");
+                                int status = 1;
+                                for (SaleItem venta : ventas) {
+                                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
+                                    resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
+                                            .append("Fecha: ").append(timestamp).append("\n")
+                                            .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
+                                            .append("Cantidad: ").append(venta.getQuantity()).append("\n")
+                                            .append("Status: ").append(status).append("\n\n");
+                                }
+
+                                new AlertDialog.Builder(CobroActivity.this)
+                                        .setTitle("Corte Parcial Guardado")
+                                        .setMessage(resumenGuardado.toString())
+                                        .setPositiveButton("OK", null)
+                                        .show();
+
                             } else {
                                 Toast.makeText(CobroActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
+
+                                // ❌ Error en la respuesta del servidor: guardar con status 3
+                                guardarCorteConError(userPhone, timestamp, ventas, 3);
                             }
                         }
 
                         @Override
                         public void onFailure(Call<Void> call, Throwable t) {
                             Toast.makeText(CobroActivity.this, "Fallo de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+
+                            // ❌ Falla de red: guardar con status 3
+                            guardarCorteConError(userPhone, timestamp, ventas, 3);
                         }
                     });
+
                 } else {
                     Toast.makeText(CobroActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
                 }
@@ -356,7 +361,7 @@ public class CobroActivity extends AppCompatActivity {
 
                     showTextDialog("Corte Total", contenido.toString());
 
-
+                    //Inicio de envio de JSON corte total
                     String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
                     String timestampFinal = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
@@ -441,6 +446,27 @@ public class CobroActivity extends AppCompatActivity {
             sonidoClick.start();
         }
     }
+
+    private void guardarCorteConError(String userPhone, String timestamp, List<SaleItem> ventas, int status) {
+        StringBuilder resumenGuardado = new StringBuilder();
+        resumenGuardado.append("Corte NO enviado. Datos guardados localmente con estatus ").append(status).append(":\n\n");
+
+        for (SaleItem venta : ventas) {
+            dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
+            resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
+                    .append("Fecha: ").append(timestamp).append("\n")
+                    .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
+                    .append("Cantidad: ").append(venta.getQuantity()).append("\n")
+                    .append("Status: ").append(status).append("\n\n");
+        }
+
+        new AlertDialog.Builder(CobroActivity.this)
+                .setTitle("Corte NO enviado")
+                .setMessage(resumenGuardado.toString())
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
 
 
     //Libera espacio en la memoria despues de los sonidos
