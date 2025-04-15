@@ -1,8 +1,10 @@
 package com.example.cobro;
 
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.widget.Button;
@@ -13,16 +15,32 @@ import android.view.View;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import android.media.MediaPlayer;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class CobroActivity extends AppCompatActivity {
@@ -52,19 +70,27 @@ public class CobroActivity extends AppCompatActivity {
     private TextView tvEstadoConexion;
     private String passwordUsuario; // Variable para almacenar la contraseña
     private MediaPlayer sonidoClick;
+    private Button btnCorteNoEnviado;
+    private TextView tvToken;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cobro);
+
+        Button btnEnviarManual = findViewById(R.id.btnEnviarManual);
+
+
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
         // Inicializar el TextView del estado de conexión
         tvEstadoConexion = findViewById(R.id.tvEstadoConexion);
-        // 🔥 Obtener la contraseña enviada desde MainActivity
-        passwordUsuario = getIntent().getStringExtra("passwordUsuario");
+
         // Inicializar sonido al cargar la actividad
         sonidoClick = MediaPlayer.create(this, R.raw.click);
 
+        // 🔥 Obtener la contraseña enviada desde MainActivity
+        passwordUsuario = getIntent().getStringExtra("passwordUsuario");
 
         // Verificar si la contraseña ya está almacenada
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
@@ -107,17 +133,8 @@ public class CobroActivity extends AppCompatActivity {
 
         //Boton para realizar conexión
         btnBluetooth.setOnClickListener(v -> {
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
             solicitarPassword("Realizar la conexión Bluetooth", () -> {
                 // Iniciar actividad para Bluetooth si la contraseña es correcta
                 Intent intent = new Intent(CobroActivity.this, Bluetooth.class);
@@ -139,17 +156,8 @@ public class CobroActivity extends AppCompatActivity {
         btnMas.setOnClickListener(v -> {
             contador++;
             tvNumero.setText(String.valueOf(contador));
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
         });
 
         btnMenos.setOnClickListener(v -> {
@@ -157,17 +165,8 @@ public class CobroActivity extends AppCompatActivity {
                 contador--;
                 tvNumero.setText(String.valueOf(contador));
             }
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
         });
 
         // Venta individual: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
@@ -175,66 +174,32 @@ public class CobroActivity extends AppCompatActivity {
             generateSingleTicketText("Tercera Edad", contador);
             acumularVenta("Tercera Edad", PRECIO_TERCERA_EDAD);
             resetCounter();
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
         });
 
         btnPasajeNormal.setOnClickListener(v -> {
             generateSingleTicketText("Pasaje Normal", contador);
             acumularVenta("Pasaje Normal", PRECIO_NORMAL);
             resetCounter();
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
 
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
         });
 
         btnEstudiante.setOnClickListener(v -> {
             generateSingleTicketText("Estudiante", contador);
             acumularVenta("Estudiante", PRECIO_ESTUDIANTE);
             resetCounter();
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
         });
 
         // Corte Parcial: muestra el ticket generado con los totales acumulados
         btnCorteParcial.setOnClickListener(v -> {
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
 
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
             solicitarPassword("realizar el Corte Parcial", () -> {
                 int pasajerosNormal = pasajerosPorTipo.get("Pasaje Normal");
                 int pasajerosEstudiante = pasajerosPorTipo.get("Estudiante");
@@ -273,6 +238,98 @@ public class CobroActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Error al guardar el corte parcial", Toast.LENGTH_SHORT).show();
                 }
+
+                // 1. Preparamos los datos de las ventas
+                List<SaleItem> ventas = new ArrayList<>();
+                if (pasajerosNormal > 0)
+                    ventas.add(new SaleItem(1, pasajerosNormal, (int) (totalNormal / pasajerosNormal))); // route_fare_id = 1
+                if (pasajerosEstudiante > 0)
+                    ventas.add(new SaleItem(2, pasajerosEstudiante, (int) (totalEstudiante / pasajerosEstudiante))); // route_fare_id = 2
+                if (pasajerosTercera > 0)
+                    ventas.add(new SaleItem(3, pasajerosTercera, (int) (totalTercera / pasajerosTercera))); // route_fare_id = 3
+
+                // 2. Obtenemos la hora actual
+                String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                String userPhone = prefs.getString("telefonoUsuario", "1234567890"); // Usa tu clave real
+
+
+
+                // 3. Construimos el objeto del request
+                PartialCutRequest corteRequest = new PartialCutRequest(
+                        "MAC00001", // Usa el identificador real del dispositivo si es dinámico
+                        timestamp,
+                        "partial",
+                        "1234567890",
+                        ventas
+                );
+
+                // 4. Obtenemos el token desde SharedPreferences
+                String token = prefs.getString("accessToken", null); // 👈 Asegúrate de haberlo guardado antes
+
+
+                //Mostrar Json de prueba
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String jsonCorte = gson.toJson(corteRequest);
+
+
+                // Mostrar en un AlertDialog
+                new AlertDialog.Builder(CobroActivity.this)
+                        .setTitle("JSON que se enviará")
+                        .setMessage(jsonCorte)
+                        .setPositiveButton("OK", null)
+                        .show();
+                //-----------------------------------------------------
+
+                // 5. Enviar al backend si hay token
+                if (token != null) {
+                    ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                Toast.makeText(CobroActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
+
+                                // ✅ Guardamos los detalles con status 1 (éxito)
+                                StringBuilder resumenGuardado = new StringBuilder();
+                                resumenGuardado.append("Datos guardados localmente:\n\n");
+                                int status = 1;
+                                for (SaleItem venta : ventas) {
+                                    dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
+                                    resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
+                                            .append("Fecha: ").append(timestamp).append("\n")
+                                            .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
+                                            .append("Cantidad: ").append(venta.getQuantity()).append("\n")
+                                            .append("Status: ").append(status).append("\n\n");
+                                }
+
+                                new AlertDialog.Builder(CobroActivity.this)
+                                        .setTitle("Corte Parcial Guardado")
+                                        .setMessage(resumenGuardado.toString())
+                                        .setPositiveButton("OK", null)
+                                        .show();
+
+                            } else {
+                                Toast.makeText(CobroActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
+
+                                // ❌ Error en la respuesta del servidor: guardar con status 3
+                                guardarCorteConError(userPhone, timestamp, ventas, 3);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Toast.makeText(CobroActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
+
+                            // ❌ Falla de red: guardar con status 3
+                            guardarCorteConError(userPhone, timestamp, ventas, 3);
+                        }
+                    });
+
+                } else {
+                    Toast.makeText(CobroActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
+                }
+
             });
         });
 
@@ -280,17 +337,8 @@ public class CobroActivity extends AppCompatActivity {
 
         // Corte Total: consulta la BD y muestra el ticket generado con el resumen de todos los cortes parciales
         btnCorteTotal.setOnClickListener(v -> {
-            // 🔥 Liberar el sonido antes de volver a crearlo
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-
-            // 🎵 Volver a crear el MediaPlayer antes de reproducir
-            sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();  // 🎧 Reproducir sonido
-            }
+            // Llamamos al metodo para reproducir Sonido
+            reproducirSonidoClick();
             solicitarPassword("realizar el Corte Total", () -> {
                 Cursor cursor = dbHelper.getResumenCortes();
                 if (cursor != null && cursor.moveToFirst()) {
@@ -313,6 +361,71 @@ public class CobroActivity extends AppCompatActivity {
                     contenido.append("Total Recaudado: $").append(totalRecaudado);
 
                     showTextDialog("Corte Total", contenido.toString());
+
+                    //Inicio de envio de JSON corte total
+                    String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
+                    String timestampFinal = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+                    JSONObject finalReportJson = new JSONObject();
+                    try {
+                        finalReportJson.put("device_identifier", "MAC00001");
+                        finalReportJson.put("timestamp", timestampFinal);
+                        finalReportJson.put("type", "final");
+                        finalReportJson.put("user", telefonoUsuario);
+
+                        // Convertimos la lista de JSONObject en un JSONArray
+                        List<JSONObject> cortesParciales = dbHelper.obtenerTodosLosCortesParcialesEstructurado();
+                        JSONArray cortesArray = new JSONArray(cortesParciales);
+
+                        finalReportJson.put("reports", cortesArray);
+
+                        // Mostrar en AlertDialog por ejemplo
+                        new AlertDialog.Builder(CobroActivity.this)
+                                .setTitle("JSON Final")
+                                .setMessage(finalReportJson.toString(2)) // Pretty print con indentación de 2 espacios
+                                .setPositiveButton("OK", null)
+                                .show();
+
+                        // Aquí convertimos el JSON a RequestBody y lo enviamos
+                        RequestBody body = RequestBody.create(
+                                MediaType.parse("application/json; charset=utf-8"),
+                                finalReportJson.toString()
+                                                );
+                        //Se declara prefs para obtener el token
+                        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                        String token = prefs.getString("accessToken", null); // 👈 Asegúrate de haberlo guardado antes
+
+
+                        // Enviar al backend si hay token
+                        if (token != null) {
+                            ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
+                                @Override
+                                public void onResponse(Call<Void> call, Response<Void> response) {
+                                    if (response.isSuccessful()) {
+                                        Toast.makeText(CobroActivity.this, "Corte TOTAL enviado al servidor", Toast.LENGTH_SHORT).show();
+                                        // 👇 Cambia estatus a 2 los que se enviaron
+                                        dbHelper.actualizarEstatusDetalleCorte(2);
+                                    } else {
+                                        Toast.makeText(CobroActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<Void> call, Throwable t) {
+                                    Toast.makeText(CobroActivity.this, "Fallo de red. Los cortes parciales se enviarán cuando la red esté disponible", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        } else {
+                            Toast.makeText(CobroActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+
+
+
                     printTicket(contenido.toString());
                 } else {
                     Toast.makeText(this, "No hay cortes registrados en la BD", Toast.LENGTH_SHORT).show();
@@ -322,7 +435,99 @@ public class CobroActivity extends AppCompatActivity {
             });
         });
 
+        btnEnviarManual.setOnClickListener(v -> {
+            reproducirSonidoClick(); // Opcional
+
+            solicitarPassword("enviar manualmente el Corte Total", () -> {
+                String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
+                String timestampPartial = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+                JSONObject partialReportJson = new JSONObject();
+                try {
+                    partialReportJson.put("device_identifier", "MAC00001");
+                    partialReportJson.put("timestamp", timestampPartial);
+                    partialReportJson.put("type", "partial");
+                    partialReportJson.put("user", telefonoUsuario);
+
+                    List<JSONObject> cortesParcialesNoEnv = dbHelper.CortesParcialesNoEnviados();
+                    JSONArray cortesNoEnviadosArray = new JSONArray(cortesParcialesNoEnv);
+                    partialReportJson.put("reports", cortesNoEnviadosArray);
+
+                    new AlertDialog.Builder(CobroActivity.this)
+                            .setTitle("JSON Cortes parciales no enviados")
+                            .setMessage(partialReportJson.toString(2))
+                            .setPositiveButton("OK", null)
+                            .show();
+
+                    RequestBody body = RequestBody.create(
+                            MediaType.parse("application/json; charset=utf-8"),
+                            partialReportJson.toString()
+                    );
+
+                    SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                    String token = prefs.getString("accessToken", null);
+
+                    if (token != null) {
+                        ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
+                            @Override
+                            public void onResponse(Call<Void> call, Response<Void> response) {
+                                if (response.isSuccessful()) {
+                                    Toast.makeText(CobroActivity.this, "Cortes Parciales enviados", Toast.LENGTH_SHORT).show();
+                                    dbHelper.actualizarEstatusCortesNoEnviados(2);
+                                } else {
+                                    Toast.makeText(CobroActivity.this, "Error al enviar cortes parciale: " + response.code(), Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<Void> call, Throwable t) {
+                                Toast.makeText(CobroActivity.this, "Fallo de red. Intenta más tarde", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else {
+                        Toast.makeText(CobroActivity.this, "Token no disponible", Toast.LENGTH_SHORT).show();
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+
+
     }
+
+    private void reproducirSonidoClick() {
+        if (sonidoClick != null) {
+            sonidoClick.release();
+            sonidoClick = null;
+        }
+        sonidoClick = MediaPlayer.create(CobroActivity.this, R.raw.click);
+        if (sonidoClick != null) {
+            sonidoClick.start();
+        }
+    }
+
+    private void guardarCorteConError(String userPhone, String timestamp, List<SaleItem> ventas, int status) {
+        StringBuilder resumenGuardado = new StringBuilder();
+
+        for (SaleItem venta : ventas) {
+            dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
+            resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
+                    .append("Fecha: ").append(timestamp).append("\n")
+                    .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
+                    .append("Cantidad: ").append(venta.getQuantity()).append("\n")
+                    .append("Status: ").append(status).append("\n\n");
+        }
+
+        new AlertDialog.Builder(CobroActivity.this)
+                .setTitle("Corte NO enviado")
+                .setMessage(resumenGuardado.toString())
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+
 
     //Libera espacio en la memoria despues de los sonidos
     @Override
@@ -346,37 +551,7 @@ public class CobroActivity extends AppCompatActivity {
     /**
      * Actualiza el TextView para mostrar la última transacción en formato específico.
      */
-    private void actualizarUltimaTransaccion(String tipo, int cantidad, int total) {
-        String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
 
-        // Abreviar el tipo de ticket para mostrar solo la inicial
-        String tipoAbreviado;
-        switch (tipo) {
-            case "Pasaje Normal":
-                tipoAbreviado = "N"; // Normal
-                break;
-            case "Estudiante":
-                tipoAbreviado = "E"; // Estudiante
-                break;
-            case "Tercera Edad":
-                tipoAbreviado = "T"; // Tercera Edad
-                break;
-            default:
-                tipoAbreviado = "X"; // Desconocido
-                break;
-        }
-
-        // Obtener hora, minutos y segundos
-        String horaMinuto = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-
-        // Formato solicitado: #1 | N | x2 | $20 | 1:26
-        String mensaje = "#" + numeroTransaccion + " | " + tipoAbreviado + " | x" + cantidad + " | $" + total + " | " + horaMinuto;
-
-        tvUltimaTransaccion.setText(mensaje);
-
-        // Incrementar el número de transacción para la siguiente
-        numeroTransaccion++;
-    }
 
 
     /**
@@ -430,40 +605,36 @@ public class CobroActivity extends AppCompatActivity {
                 precio = 0;
         }
 
-        int total = precio * cantidad;
-
-        // Abreviar el tipo de ticket para mostrar solo la inicial
         String tipoAbreviado;
         switch (tipo) {
             case "Pasaje Normal":
-                tipoAbreviado = "N"; // Normal
+                tipoAbreviado = "Pasaje Normal";
                 break;
             case "Estudiante":
-                tipoAbreviado = "E"; // Estudiante
+                tipoAbreviado = "Estudiante";
                 break;
             case "Tercera Edad":
-                tipoAbreviado = "T"; // Tercera Edad
+                tipoAbreviado = "Tercera Edad";
                 break;
             default:
-                tipoAbreviado = "X"; // Desconocido
+                tipoAbreviado = "X";
                 break;
         }
 
-        // Formato: #1 | N | x2 | $20 | 14:26:12
-        String mensajeTransaccion = "#" + numeroTransaccion + " | " + tipoAbreviado + " | x" + cantidad + " | $" + total + " | " + fechaHora;
+        // Mostrar un solo resumen en pantalla
+        String resumenTransaccion = "#" + numeroTransaccion + " | " + tipoAbreviado + " | x" + cantidad + " | $" + precio + " | " + fechaHora;
+        tvUltimaTransaccion.setText(resumenTransaccion);
+        showTextDialog("Ticket " + tipo, resumenTransaccion);
 
-        // Actualizar la última transacción en pantalla
-        tvUltimaTransaccion.setText(mensajeTransaccion);
-
-        // 🔥 Mostrar el ticket en el diálogo
-        showTextDialog("Ticket " + tipo, mensajeTransaccion);
-
-        // Enviar ticket a la impresora en formato correcto
-        printTicket(mensajeTransaccion);
-
-        // Incrementar el número de transacción para la siguiente
-        numeroTransaccion++;
+        // 🔁 Imprimir un ticket por cada boleto
+        for (int i = 0; i < cantidad; i++) {
+            String mensajeIndividual = "#" + numeroTransaccion + " | " + tipoAbreviado + " | $"
+                    + precio + " | " + fechaHora;
+            printTicket(mensajeIndividual);
+            numeroTransaccion++; // 👈 Importante: aumenta con cada boleto individual
+        }
     }
+
 
 
     /**
@@ -529,6 +700,10 @@ public class CobroActivity extends AppCompatActivity {
      */
     private void actualizarEstadoConexion() {
         if (isBluetoothConnected()) {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+
+                return;
+            }
             tvEstadoConexion.setText("✅ Conectado con:\n" + Bluetooth.bluetoothSocket.getRemoteDevice().getName());
             tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {

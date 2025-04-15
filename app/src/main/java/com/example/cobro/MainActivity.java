@@ -1,9 +1,11 @@
 package com.example.cobro;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,8 +22,8 @@ import android.os.Looper;
 import android.widget.TextView;
 import android.media.MediaPlayer;
 
-
-
+import retrofit2.Call;
+import retrofit2.Response;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -61,16 +63,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Mensaje temporal de prueba
                 Toast.makeText(MainActivity.this, "Crear cuenta", Toast.LENGTH_SHORT).show();
-                if (sonidoClick != null) {
-                    sonidoClick.release();
-                    sonidoClick = null;
-                }
-
-                // 🎵 Volver a crear el MediaPlayer antes de reproducir
-                sonidoClick = MediaPlayer.create(MainActivity.this, R.raw.click);
-                if (sonidoClick != null) {
-                    sonidoClick.start();  // 🎧 Reproducir sonido
-                }
+                // Llamamos al metodo para reproducir Sonido
+                reproducirSonidoClick();
                 // Si tienes una pantalla de registro, ábrela
                 Intent intent = new Intent(MainActivity.this, crearActivity.class);
                 startActivity(intent);
@@ -80,17 +74,8 @@ public class MainActivity extends AppCompatActivity {
         btnIngresar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 🔥 Liberar el sonido antes de volver a crearlo
-                if (sonidoClick != null) {
-                    sonidoClick.release();
-                    sonidoClick = null;
-                }
-
-                // 🎵 Volver a crear el MediaPlayer antes de reproducir
-                sonidoClick = MediaPlayer.create(MainActivity.this, R.raw.click);
-                if (sonidoClick != null) {
-                    sonidoClick.start();  // 🎧 Reproducir sonido
-                }
+                // Llamamos al metodo para reproducir Sonido
+                reproducirSonidoClick();
 
                 // ✅ Llamar a la función de validación
                 validarLogin();
@@ -99,15 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-    //Libera espacio en la memoria despues de los sonidos
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (sonidoClick != null) {
-            sonidoClick.release();
-            sonidoClick = null;
-        }
-    }
+
 
 
 
@@ -129,48 +106,62 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // 🔹 Mostrar diálogo de carga mientras se verifica el login
+        // Mostrar diálogo de carga
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Cargando...")
-                .setMessage("Verificando ")
+                .setMessage("Verificando credenciales")
                 .setCancelable(false);
 
         AlertDialog progressDialog = builder.create();
         progressDialog.show();
 
-        // 🔹 Simular un pequeño retraso para la carga (1.5 segundos)
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            SQLiteDatabase db = dbHelper.getReadableDatabase();
-            Cursor cursor = db.rawQuery("SELECT * FROM usuarios WHERE usuarios=? AND contraseña=?", new String[]{usuario, password});
+        // Enviar petición al API
+        LoginRequest request = new LoginRequest(usuario, password);
+        ApiClient.getApiService().login(request).enqueue(new retrofit2.Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                progressDialog.dismiss();
 
-            if (cursor.moveToFirst()) {
-                Toast.makeText(this, "Login exitoso", Toast.LENGTH_SHORT).show();
+                if (response.isSuccessful() && response.body() != null) {
+                    String token = response.body().getData().getAccessToken(); // ✅ Correcto ahora
 
-                // 🔥 Obtener la contraseña del usuario desde la base de datos
-                String contraseñaUsuario = cursor.getString(cursor.getColumnIndex("contraseña"));
+                    // 🔐 Guardar contraseña y token de forma permanente
+                    SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("passwordUsuario", password);  // Guarda la contraseña ingresada
+                    editor.putString("accessToken", token);           // Guarda el token
+                    editor.apply();
+                    Log.d("TOKEN_DEBUG", "Token guardado: " + token);
 
+                    Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
 
-                // Crear Intent para abrir CobroActivity
-                Intent intent = new Intent(MainActivity.this, CobroActivity.class);
-
-                // 🔥 Enviar la contraseña como extra en el Intent
-                intent.putExtra("passwordUsuario", contraseñaUsuario);
-
-                // Iniciar la actividad de Cobro
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
+                    // Ir a la siguiente pantalla y enviar el token
+                    Intent intent = new Intent(MainActivity.this, CobroActivity.class);
+                    intent.putExtra("token", token);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
+                }
             }
 
-
-
-            cursor.close();
-            db.close();
-            progressDialog.dismiss(); // Oculta el diálogo al terminar
-
-        }, 1000); // 1.5 segundos de espera
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                progressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "Error de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
+    private void reproducirSonidoClick() {
+        if (sonidoClick != null) {
+            sonidoClick.release();
+            sonidoClick = null;
+        }
+        sonidoClick = MediaPlayer.create(MainActivity.this, R.raw.click);
+        if (sonidoClick != null) {
+            sonidoClick.start();
+        }
+    }
 
 
 }

@@ -38,16 +38,8 @@ public class crearActivity extends AppCompatActivity {
         btnCrear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (sonidoClick != null) {
-                    sonidoClick.release();
-                    sonidoClick = null;
-                }
-
-                // 🎵 Volver a crear el MediaPlayer antes de reproducir
-                sonidoClick = MediaPlayer.create(crearActivity.this, R.raw.click);
-                if (sonidoClick != null) {
-                    sonidoClick.start();  // 🎧 Reproducir sonido
-                }
+                // Llamamos al metodo para reproducir Sonido
+                reproducirSonidoClick();
                 registrarUsuario();
             }
         });
@@ -73,6 +65,16 @@ public class crearActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Error: El usuario ya existe", Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+    private void reproducirSonidoClick() {
+        if (sonidoClick != null) {
+            sonidoClick.release();
+            sonidoClick = null;
+        }
+        sonidoClick = MediaPlayer.create(crearActivity.this, R.raw.click);
+        if (sonidoClick != null) {
+            sonidoClick.start();
         }
     }
 }
