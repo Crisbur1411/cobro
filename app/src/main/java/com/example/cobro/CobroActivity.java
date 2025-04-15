@@ -79,6 +79,7 @@ public class CobroActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cobro);
 
+        Button btnEnviarManual = findViewById(R.id.btnEnviarManual);
 
 
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
@@ -318,7 +319,7 @@ public class CobroActivity extends AppCompatActivity {
 
                         @Override
                         public void onFailure(Call<Void> call, Throwable t) {
-                            Toast.makeText(CobroActivity.this, "Fallo de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CobroActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
 
                             // ❌ Falla de red: guardar con status 3
                             guardarCorteConError(userPhone, timestamp, ventas, 3);
@@ -434,6 +435,66 @@ public class CobroActivity extends AppCompatActivity {
             });
         });
 
+        btnEnviarManual.setOnClickListener(v -> {
+            reproducirSonidoClick(); // Opcional
+
+            solicitarPassword("enviar manualmente el Corte Total", () -> {
+                String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
+                String timestampPartial = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+                JSONObject partialReportJson = new JSONObject();
+                try {
+                    partialReportJson.put("device_identifier", "MAC00001");
+                    partialReportJson.put("timestamp", timestampPartial);
+                    partialReportJson.put("type", "partial");
+                    partialReportJson.put("user", telefonoUsuario);
+
+                    List<JSONObject> cortesParcialesNoEnv = dbHelper.CortesParcialesNoEnviados();
+                    JSONArray cortesNoEnviadosArray = new JSONArray(cortesParcialesNoEnv);
+                    partialReportJson.put("reports", cortesNoEnviadosArray);
+
+                    new AlertDialog.Builder(CobroActivity.this)
+                            .setTitle("JSON Cortes parciales no enviados")
+                            .setMessage(partialReportJson.toString(2))
+                            .setPositiveButton("OK", null)
+                            .show();
+
+                    RequestBody body = RequestBody.create(
+                            MediaType.parse("application/json; charset=utf-8"),
+                            partialReportJson.toString()
+                    );
+
+                    SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                    String token = prefs.getString("accessToken", null);
+
+                    if (token != null) {
+                        ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
+                            @Override
+                            public void onResponse(Call<Void> call, Response<Void> response) {
+                                if (response.isSuccessful()) {
+                                    Toast.makeText(CobroActivity.this, "Cortes Parciales enviados", Toast.LENGTH_SHORT).show();
+                                    dbHelper.actualizarEstatusCortesNoEnviados(2);
+                                } else {
+                                    Toast.makeText(CobroActivity.this, "Error al enviar cortes parciale: " + response.code(), Toast.LENGTH_SHORT).show();
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<Void> call, Throwable t) {
+                                Toast.makeText(CobroActivity.this, "Fallo de red. Intenta más tarde", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else {
+                        Toast.makeText(CobroActivity.this, "Token no disponible", Toast.LENGTH_SHORT).show();
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            });
+        });
+
+
     }
 
     private void reproducirSonidoClick() {
@@ -449,7 +510,6 @@ public class CobroActivity extends AppCompatActivity {
 
     private void guardarCorteConError(String userPhone, String timestamp, List<SaleItem> ventas, int status) {
         StringBuilder resumenGuardado = new StringBuilder();
-        resumenGuardado.append("Corte NO enviado. Datos guardados localmente con estatus ").append(status).append(":\n\n");
 
         for (SaleItem venta : ventas) {
             dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
@@ -491,37 +551,7 @@ public class CobroActivity extends AppCompatActivity {
     /**
      * Actualiza el TextView para mostrar la última transacción en formato específico.
      */
-    private void actualizarUltimaTransaccion(String tipo, int cantidad, int total) {
-        String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
 
-        // Abreviar el tipo de ticket para mostrar solo la inicial
-        String tipoAbreviado;
-        switch (tipo) {
-            case "Pasaje Normal":
-                tipoAbreviado = "N"; // Normal
-                break;
-            case "Estudiante":
-                tipoAbreviado = "E"; // Estudiante
-                break;
-            case "Tercera Edad":
-                tipoAbreviado = "T"; // Tercera Edad
-                break;
-            default:
-                tipoAbreviado = "X"; // Desconocido
-                break;
-        }
-
-        // Obtener hora, minutos y segundos
-        String horaMinuto = new SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(new Date());
-
-        // Formato solicitado: #1 | N | x2 | $20 | 1:26
-        String mensaje = "#" + numeroTransaccion + " | " + tipoAbreviado + " | x" + cantidad + " | $" + total + " | " + horaMinuto;
-
-        tvUltimaTransaccion.setText(mensaje);
-
-        // Incrementar el número de transacción para la siguiente
-        numeroTransaccion++;
-    }
 
 
     /**
@@ -575,40 +605,36 @@ public class CobroActivity extends AppCompatActivity {
                 precio = 0;
         }
 
-        int total = precio * cantidad;
-
-        // Abreviar el tipo de ticket para mostrar solo la inicial
         String tipoAbreviado;
         switch (tipo) {
             case "Pasaje Normal":
-                tipoAbreviado = "N"; // Normal
+                tipoAbreviado = "Pasaje Normal";
                 break;
             case "Estudiante":
-                tipoAbreviado = "E"; // Estudiante
+                tipoAbreviado = "Estudiante";
                 break;
             case "Tercera Edad":
-                tipoAbreviado = "T"; // Tercera Edad
+                tipoAbreviado = "Tercera Edad";
                 break;
             default:
-                tipoAbreviado = "X"; // Desconocido
+                tipoAbreviado = "X";
                 break;
         }
 
-        // Formato: #1 | N | x2 | $20 | 14:26:12
-        String mensajeTransaccion = "#" + numeroTransaccion + " | " + tipoAbreviado + " | x" + cantidad + " | $" + total + " | " + fechaHora;
+        // Mostrar un solo resumen en pantalla
+        String resumenTransaccion = "#" + numeroTransaccion + " | " + tipoAbreviado + " | x" + cantidad + " | $" + precio + " | " + fechaHora;
+        tvUltimaTransaccion.setText(resumenTransaccion);
+        showTextDialog("Ticket " + tipo, resumenTransaccion);
 
-        // Actualizar la última transacción en pantalla
-        tvUltimaTransaccion.setText(mensajeTransaccion);
-
-        // 🔥 Mostrar el ticket en el diálogo
-        showTextDialog("Ticket " + tipo, mensajeTransaccion);
-
-        // Enviar ticket a la impresora en formato correcto
-        printTicket(mensajeTransaccion);
-
-        // Incrementar el número de transacción para la siguiente
-        numeroTransaccion++;
+        // 🔁 Imprimir un ticket por cada boleto
+        for (int i = 0; i < cantidad; i++) {
+            String mensajeIndividual = "#" + numeroTransaccion + " | " + tipoAbreviado + " | $"
+                    + precio + " | " + fechaHora;
+            printTicket(mensajeIndividual);
+            numeroTransaccion++; // 👈 Importante: aumenta con cada boleto individual
+        }
     }
+
 
 
     /**
