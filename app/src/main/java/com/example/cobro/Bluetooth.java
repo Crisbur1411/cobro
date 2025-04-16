@@ -17,6 +17,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -41,6 +43,24 @@ public class Bluetooth extends AppCompatActivity {
 
         // Verificar permisos para Bluetooth
         requestPermissions();
+
+        //Navegacion de secciones
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+        bottomNavigationView.setSelectedItemId(R.id.nav_conexion);
+
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId();
+
+            if (itemId == R.id.nav_inicio) {
+                startActivity(new Intent(this, CobroActivity.class));
+                return true;
+            }else if (itemId == R.id.nav_cortes) {
+                startActivity(new Intent(this, CortesActivity.class));
+                return true;
+            }
+
+            return false;
+        });
 
         ListView devicesListView = findViewById(R.id.devices_list_view);
 
