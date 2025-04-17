@@ -32,7 +32,9 @@
     <string name="btn_total">Corte Total</string>
 
 
-    <string name="lbl_reenvio">Sincronizar</string>
+    <string name="lbl_reenvio">Sincronizar Cortes Parciales</string>
+    <string name="lbl_reenvio_total">Sincronizar Cortes Totales</string>
+
 
 
 </resources>

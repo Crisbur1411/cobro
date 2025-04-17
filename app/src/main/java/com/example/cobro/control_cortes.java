@@ -21,7 +21,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 4;
+    private static final int DATABASE_VERSION = 6;
 
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
@@ -48,6 +48,21 @@ public class control_cortes extends SQLiteOpenHelper {
                     "status INTEGER);";
 
 
+    private static final String TABLE_CORTE_TOTAL =
+            "CREATE TABLE corte_total(" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "nombre TEXT," +
+                    "fecha_hora TEXT," +
+                    "pasajeros_normal INTEGER," +
+                    "total_normal REAL," +
+                    "pasajeros_estudiante INTEGER," +
+                    "total_estudiante REAL," +
+                    "pasajeros_tercera_edad INTEGER," +
+                    "total_tercera_edad REAL," +
+                    "total_recaudado REAL, " +
+                    "status INTEGER);";
+
+
 
     public control_cortes(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -57,12 +72,14 @@ public class control_cortes extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(TABLE_CREATE);
         db.execSQL(TABLE_CREATE_CORTE_DETALLE);
+        db.execSQL(TABLE_CORTE_TOTAL);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS cortes");
         db.execSQL("DROP TABLE IF EXISTS DetalleCorteParcial");
+        db.execSQL("DROP TABLE IF EXISTS corte_total");
         onCreate(db);
     }
 
@@ -97,6 +114,30 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
         return result;
     }
+
+    public long insertarCorteTotal(String nombre, String fechaHora, int pasajerosNormal, double totalNormal,
+                                   int pasajerosEstudiante, double totalEstudiante,
+                                   int pasajerosTerceraEdad, double totalTerceraEdad,
+                                   double totalRecaudado, int status) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("nombre", nombre);
+        values.put("fecha_hora", fechaHora);
+        values.put("pasajeros_normal", pasajerosNormal);
+        values.put("total_normal", totalNormal);
+        values.put("pasajeros_estudiante", pasajerosEstudiante);
+        values.put("total_estudiante", totalEstudiante);
+        values.put("pasajeros_tercera_edad", pasajerosTerceraEdad);
+        values.put("total_tercera_edad", totalTerceraEdad);
+        values.put("total_recaudado", totalRecaudado);
+        values.put("Status", status);
+
+        long resultado = db.insert("corte_total", null, values);
+        db.close();
+        return resultado;
+    }
+
+
 
     /**
      * Devuelve la suma de todos los cortes (parciales) registrados.
@@ -268,6 +309,16 @@ public class control_cortes extends SQLiteOpenHelper {
         db.update("DetalleCorteParcial", values, "status = ?", new String[]{"3"});
         db.close();
     }
+
+    public void actualizarEstatusCorteTotal(int nuevoEstatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("estatus", nuevoEstatus);
+
+        db.update("corte_total", values, "estatus = ?", new String[]{"1"}); // Actualiza solo los no enviados
+        db.close();
+    }
+
 
 
     /*

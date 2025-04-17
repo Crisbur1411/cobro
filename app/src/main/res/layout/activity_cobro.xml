@@ -5,7 +5,6 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/frame"
     tools:context=".CobroActivity">
 
 
@@ -123,6 +122,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/tvNumero"
+        android:layout_marginStart="16dp"
         android:layout_marginBottom="180dp"
         android:text="Última Transacción"
         android:textColor="@android:color/black"
@@ -135,8 +135,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginStart="40dp"
-        android:layout_marginBottom="692dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="684dp"
         android:text="Estado"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="16sp"

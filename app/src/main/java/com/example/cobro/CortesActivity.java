@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.gson.Gson;
@@ -51,7 +52,6 @@ public class CortesActivity extends AppCompatActivity {
 
     private TextView tvEstadoConexion;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,11 +65,14 @@ public class CortesActivity extends AppCompatActivity {
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         // Inicializar sonido al cargar la actividad
         sonidoClick = MediaPlayer.create(this, R.raw.click);
-
+        //Texto de conexión
         tvEstadoConexion = findViewById(R.id.tvEstadoConexion);
+        //Boton de corte total
         btnCorteTotal = findViewById(R.id.btnCorteTotal);
 
-
+        //Botones mara mostrar los cortes parciales y totales
+        TextView btnParciales = findViewById(R.id.btnCortesParciales);
+        TextView btnTotales = findViewById(R.id.btnCortesTotales);
 
         //Navegacion de secciones
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -92,20 +95,41 @@ public class CortesActivity extends AppCompatActivity {
 
 
 
-        // Corte Total: consulta la BD y muestra el ticket generado con el resumen de todos los cortes parciales
+        // Boton de para llamar al metodo de corte total
         btnCorteTotal.setOnClickListener(v -> EnvioCorteTotal());
 
 
+        //Acción para Enviar cortes parciales no enviados
         LinearLayout textViewWithIcon = findViewById(R.id.textViewWithIcon);
 
         textViewWithIcon.setOnClickListener(v -> {
-            // Aquí va el método que quieres ejecutar
             EnviarCortesNoEnviados();
+        });
+
+        //Acción para Enviar cortes totales no enviados
+        LinearLayout Sincro_Totales = findViewById(R.id.Sincro_Totales);
+
+        Sincro_Totales.setOnClickListener(v -> {
+            EnviarCorteTotalNoEnviado();
         });
 
 
         //Boton para enviar cortes parciales no enviados anteriormente
         btnEnviarManual.setOnClickListener(v ->EnviarCortesNoEnviados());
+
+        btnParciales.setOnClickListener(v -> {
+            btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+            btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+
+            // Lógica de cortes parciales
+        });
+
+        btnTotales.setOnClickListener(v -> {
+            btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+            btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+
+            // Lógica de cortes totales
+        });
 
     }
 
@@ -201,6 +225,26 @@ public class CortesActivity extends AppCompatActivity {
 
             showTextDialog("Corte Total", contenido.toString());
 
+            int status = 1;
+            long resultadoInsert = dbHelper.insertarCorteTotal(
+                    "Corte Total",
+                    fechaHora,
+                    totalPasajerosNormal,
+                    totalNormal,
+                    totalPasajerosEstudiante,
+                    totalEstudiante,
+                    totalPasajerosTercera,
+                    totalTercera,
+                    totalRecaudado,
+                    status
+            );
+
+            if (resultadoInsert != -1) {
+                Toast.makeText(CortesActivity.this, "✅ Corte total guardado correctamente en la base de datos local.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(CortesActivity.this, "❌ Error al guardar el corte total en la base de datos.", Toast.LENGTH_SHORT).show();
+            }
+
 
             //Inicio de envio de JSON corte total
             String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
@@ -245,6 +289,8 @@ public class CortesActivity extends AppCompatActivity {
                                 Toast.makeText(CortesActivity.this, "Corte TOTAL enviado al servidor", Toast.LENGTH_SHORT).show();
                                 // 👇 Cambia estatus a 2 los que se enviaron
                                 dbHelper.actualizarEstatusDetalleCorte(2);
+                                dbHelper.actualizarEstatusCorteTotal(2);   //
+
                             } else {
                                 Toast.makeText(CortesActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
                             }
@@ -273,8 +319,77 @@ public class CortesActivity extends AppCompatActivity {
         dbHelper.borrarCortes(); // Reinicia los cortes
         Toast.makeText(this, "Se reiniciaron los cortes parciales para el día.", Toast.LENGTH_SHORT).show();
 
+    }
 
 
+
+    public void EnviarCorteTotalNoEnviado(){
+        // Llamamos al metodo para reproducir Sonido
+        reproducirSonidoClick();
+        //Obtenemos SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        //Inicio de envio de JSON corte total
+        String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
+        String timestampFinal = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+        JSONObject finalReportJson = new JSONObject();
+        try {
+            finalReportJson.put("device_identifier", "MAC00001");
+            finalReportJson.put("timestamp", timestampFinal);
+            finalReportJson.put("type", "final");
+            finalReportJson.put("user", telefonoUsuario);
+
+            // Convertimos la lista de JSONObject en un JSONArray
+            List<JSONObject> cortesParciales = dbHelper.obtenerTodosLosCortesParcialesEstructurado();
+            JSONArray cortesArray = new JSONArray(cortesParciales);
+
+            finalReportJson.put("reports", cortesArray);
+
+            // Mostrar en AlertDialog por ejemplo
+            new AlertDialog.Builder(CortesActivity.this)
+                    .setTitle("JSON Final")
+                    .setMessage(finalReportJson.toString(2)) // Pretty print con indentación de 2 espacios
+                    .setPositiveButton("OK", null)
+                    .show();
+
+            // Aquí convertimos el JSON a RequestBody y lo enviamos
+            RequestBody body = RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    finalReportJson.toString()
+            );
+            //Se declara prefs para obtener el token
+            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            String token = prefs.getString("accessToken", null); // 👈 Asegúrate de haberlo guardado antes
+
+
+            // Enviar al backend si hay token
+            if (token != null) {
+                ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(CortesActivity.this, "Corte TOTAL enviado al servidor", Toast.LENGTH_SHORT).show();
+                            // 👇 Cambia estatus a 2 los que se enviaron
+                            dbHelper.actualizarEstatusDetalleCorte(2);
+                            dbHelper.actualizarEstatusCorteTotal(2);   //
+
+                        } else {
+                            Toast.makeText(CortesActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Toast.makeText(CortesActivity.this, "Fallo de red. Los cortes parciales se enviarán cuando la red esté disponible", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else {
+                Toast.makeText(CortesActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
     }
 
