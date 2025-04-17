@@ -29,7 +29,7 @@
     <string name="descripcion_agregar">Descripción de la imagen de agregar</string>
 
     <string name="btn_parcial">Corte Parcial</string>
-    <string name="btn_total">Corte Total</string>
+    <string name="btn_total">Generar Corte Total</string>
 
 
     <string name="lbl_reenvio">Sincronizar Cortes Parciales</string>

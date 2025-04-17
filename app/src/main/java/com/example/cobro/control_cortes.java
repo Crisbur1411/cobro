@@ -21,7 +21,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 6;
+    private static final int DATABASE_VERSION = 7;
 
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
@@ -130,7 +130,7 @@ public class control_cortes extends SQLiteOpenHelper {
         values.put("pasajeros_tercera_edad", pasajerosTerceraEdad);
         values.put("total_tercera_edad", totalTerceraEdad);
         values.put("total_recaudado", totalRecaudado);
-        values.put("Status", status);
+        values.put("status", status);
 
         long resultado = db.insert("corte_total", null, values);
         db.close();
@@ -313,9 +313,9 @@ public class control_cortes extends SQLiteOpenHelper {
     public void actualizarEstatusCorteTotal(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("estatus", nuevoEstatus);
+        values.put("status", nuevoEstatus);
 
-        db.update("corte_total", values, "estatus = ?", new String[]{"1"}); // Actualiza solo los no enviados
+        db.update("corte_total", values, "status = ?", new String[]{"1"}); // Actualiza solo los no enviados
         db.close();
     }
 
