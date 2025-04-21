@@ -21,7 +21,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 7;
+    private static final int DATABASE_VERSION = 11;
 
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
@@ -330,6 +330,42 @@ public class control_cortes extends SQLiteOpenHelper {
     }
 
      */
+
+
+    public List<String> getCortesTotales() {
+        List<String> cortes = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM corte_total WHERE status = 2 ", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                String nombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre"));
+                String fechaHora = cursor.getString(cursor.getColumnIndexOrThrow("fecha_hora"));
+                int normal = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_normal"));
+                double totalNormal = cursor.getDouble(cursor.getColumnIndexOrThrow("total_normal"));
+                int estudiante = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_estudiante"));
+                double totalEstudiante = cursor.getDouble(cursor.getColumnIndexOrThrow("total_estudiante"));
+                int terceraEdad = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_tercera_edad"));
+                double totalTercer = cursor.getDouble(cursor.getColumnIndexOrThrow("total_tercera_edad"));
+                double totalRecaudado = cursor.getDouble(cursor.getColumnIndexOrThrow("total_recaudado"));
+
+                String corte =nombre + "\n" +
+                        "Fecha y hora: " + fechaHora + "\n" +
+                        "Pasaje Normal: " + normal + " - $" + String.format("%.2f", totalNormal) + "\n" +
+                        "Estudiante: " + estudiante + " - $" + String.format("%.2f", totalEstudiante) + "\n" +
+                        "Tercera Edad: " + terceraEdad + " - $" + String.format("%.2f", totalTercer) + "\n" +
+                        "Total Recaudado: $" + String.format("%.2f", totalRecaudado);
+
+                cortes.add(corte);
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return cortes;
+    }
+
 
 
 }

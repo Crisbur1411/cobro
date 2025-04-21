@@ -9,8 +9,10 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,12 +56,13 @@ public class CortesActivity extends AppCompatActivity {
     private TextView tvEstadoConexion;
 
     private LinearLayout Sincro_Totales;
+    private ListView listaTotales;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cortes);
-
+//Declaración de elementos utilizados
         // Inicializar la base de datos
         dbHelper = new control_cortes(this);
         //Inicializar SharedPreferens
@@ -74,6 +77,10 @@ public class CortesActivity extends AppCompatActivity {
         //Botones mara mostrar los cortes parciales y totales
         TextView btnParciales = findViewById(R.id.btnCortesParciales);
         TextView btnTotales = findViewById(R.id.btnCortesTotales);
+
+        //Lista de cortes totales
+        listaTotales = findViewById(R.id.listViewCortes);
+
 
         //Navegacion de secciones
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -95,7 +102,6 @@ public class CortesActivity extends AppCompatActivity {
 
         //Acción para Enviar cortes totales no enviados
         Sincro_Totales = findViewById(R.id.Sincro_Totales);
-        Sincro_Totales.setVisibility(View.GONE);
 
 
         // Boton de para llamar al metodo de corte total
@@ -126,14 +132,23 @@ public class CortesActivity extends AppCompatActivity {
             btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
             btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 
-            // Lógica de cortes parciales
+
         });
 
         btnTotales.setOnClickListener(v -> {
             btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
             btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 
-            // Lógica de cortes totales
+            List<String> cortes = dbHelper.getCortesTotales(); // metodo para obtener cortes totales
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                    this,
+                    android.R.layout.simple_list_item_1,
+                    cortes
+            );
+
+            listaTotales.setAdapter(adapter);
+
         });
 
     }
@@ -305,7 +320,6 @@ public class CortesActivity extends AppCompatActivity {
                         public void onFailure(Call<Void> call, Throwable t) {
                             Toast.makeText(CortesActivity.this, "Fallo de red. Los cortes parciales se enviarán cuando la red esté disponible", Toast.LENGTH_SHORT).show();
 
-                            Sincro_Totales.setVisibility(View.VISIBLE);
                             // Guarda el JSON para reintento
                             SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
                             editor.putString("jsonPendiente", finalReportJson.toString());
@@ -362,8 +376,6 @@ public class CortesActivity extends AppCompatActivity {
                                         editor.remove("jsonPendiente");
                                         editor.apply();
 
-                                        // Ocultar botón
-                                        Sincro_Totales.setVisibility(View.GONE);
                                     } else {
                                         Toast.makeText(CortesActivity.this, "Error al reenviar: " + response.code(), Toast.LENGTH_SHORT).show();
                                     }

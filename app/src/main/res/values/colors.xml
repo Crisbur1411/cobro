@@ -19,5 +19,7 @@
     <color name="colorPlusMinus">#9C27B0</color>     <!-- Púrpura -->
     <color name="purple_500">#6200EE</color> <!-- Color normal del botón -->
     <color name="purple_700">#3700B3</color> <!-- Color al presionar -->
+    <color name="fondo_cajon">#fcfff2</color> <!-- Color para fondos de datos -->
+
 
 </resources>

@@ -97,7 +97,6 @@ public class CobroActivity extends AppCompatActivity {
             return false;
         });
 
-        Button btnEnviarManual = findViewById(R.id.btnEnviarManual);
 
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
         // Inicializar el TextView del estado de conexión
