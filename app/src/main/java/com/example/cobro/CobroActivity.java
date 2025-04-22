@@ -211,120 +211,130 @@ public class CobroActivity extends AppCompatActivity {
     public void realizarCorteParcial() {
         reproducirSonidoClick();
 
-        solicitarPassword("realizar el Corte Parcial", () -> {
-            int pasajerosNormal = pasajerosPorTipo.get("Pasaje Normal");
-            int pasajerosEstudiante = pasajerosPorTipo.get("Estudiante");
-            int pasajerosTercera = pasajerosPorTipo.get("Tercera Edad");
+        int pasajerosNormal = pasajerosPorTipo.get("Pasaje Normal");
+        int pasajerosEstudiante = pasajerosPorTipo.get("Estudiante");
+        int pasajerosTercera = pasajerosPorTipo.get("Tercera Edad");
 
-            double totalNormal = ingresosPorTipo.get("Pasaje Normal");
-            double totalEstudiante = ingresosPorTipo.get("Estudiante");
-            double totalTercera = ingresosPorTipo.get("Tercera Edad");
+        // ✅ Validar si no hay ningún pasajero registrado
+        if (pasajerosNormal == 0 && pasajerosEstudiante == 0 && pasajerosTercera == 0) {
+            Toast.makeText(this, "No se puede realizar el corte parcial porque no se han generado tickets", Toast.LENGTH_LONG).show();
+            return;
+        }
 
-            long id = dbHelper.insertarCorteParcial(
-                    numeroCorteParcial,
-                    pasajerosNormal,
-                    pasajerosEstudiante,
-                    pasajerosTercera,
-                    totalNormal,
-                    totalEstudiante,
-                    totalTercera
-            );
+        double totalNormal = ingresosPorTipo.get("Pasaje Normal");
+        double totalEstudiante = ingresosPorTipo.get("Estudiante");
+        double totalTercera = ingresosPorTipo.get("Tercera Edad");
+        double totalCorte = totalNormal + totalEstudiante + totalTercera;
+        int status = 1;
 
-            if (id != -1) {
-                StringBuilder contenido = new StringBuilder();
-                String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
-                contenido.append("Corte Parcial #").append(numeroCorteParcial).append("\n")
-                        .append("Fecha y Hora: ").append(fechaHora).append("\n\n")
-                        .append("Pasaje Normal: ").append(pasajerosNormal).append("  |  $").append(totalNormal).append("\n")
-                        .append("Estudiante:    ").append(pasajerosEstudiante).append("  |  $").append(totalEstudiante).append("\n")
-                        .append("Tercera Edad:  ").append(pasajerosTercera).append("  |  $").append(totalTercera).append("\n\n");
-                double totalCorte = totalNormal + totalEstudiante + totalTercera;
-                contenido.append("Total Recaudado: $").append(totalCorte);
+        long id = dbHelper.insertarCorteParcial(
+                numeroCorteParcial,
+                pasajerosNormal,
+                pasajerosEstudiante,
+                pasajerosTercera,
+                totalNormal,
+                totalEstudiante,
+                totalTercera,
+                status,
+                totalCorte
+        );
 
-                showTextDialog("Corte Parcial #" + numeroCorteParcial, contenido.toString());
-                printTicket(contenido.toString());
+        if (id != -1) {
+            StringBuilder contenido = new StringBuilder();
+            String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
+            contenido.append("Corte Parcial #").append(numeroCorteParcial).append("\n")
+                    .append("Fecha y Hora: ").append(fechaHora).append("\n\n")
+                    .append("Pasaje Normal: ").append(pasajerosNormal).append("  |  $").append(totalNormal).append("\n")
+                    .append("Estudiante:    ").append(pasajerosEstudiante).append("  |  $").append(totalEstudiante).append("\n")
+                    .append("Tercera Edad:  ").append(pasajerosTercera).append("  |  $").append(totalTercera).append("\n\n");
+            contenido.append("Total Recaudado: $").append(totalCorte);
 
-                numeroCorteParcial++;
-                resetAcumuladores();
-            } else {
-                Toast.makeText(this, "Error al guardar el corte parcial", Toast.LENGTH_SHORT).show();
-            }
+            showTextDialog("Corte Parcial #" + numeroCorteParcial, contenido.toString());
+            printTicket(contenido.toString());
 
-            List<SaleItem> ventas = new ArrayList<>();
-            if (pasajerosNormal > 0)
-                ventas.add(new SaleItem(1, pasajerosNormal, (int) (totalNormal / pasajerosNormal)));
-            if (pasajerosEstudiante > 0)
-                ventas.add(new SaleItem(2, pasajerosEstudiante, (int) (totalEstudiante / pasajerosEstudiante)));
-            if (pasajerosTercera > 0)
-                ventas.add(new SaleItem(3, pasajerosTercera, (int) (totalTercera / pasajerosTercera)));
+            numeroCorteParcial++;
+            resetAcumuladores();
+        } else {
+            Toast.makeText(this, "Error al guardar el corte parcial", Toast.LENGTH_SHORT).show();
+        }
 
-            String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+        List<SaleItem> ventas = new ArrayList<>();
+        if (pasajerosNormal > 0)
+            ventas.add(new SaleItem(1, pasajerosNormal, (int) (totalNormal / pasajerosNormal)));
+        if (pasajerosEstudiante > 0)
+            ventas.add(new SaleItem(2, pasajerosEstudiante, (int) (totalEstudiante / pasajerosEstudiante)));
+        if (pasajerosTercera > 0)
+            ventas.add(new SaleItem(3, pasajerosTercera, (int) (totalTercera / pasajerosTercera)));
 
-            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-            String userPhone = prefs.getString("telefonoUsuario", "1234567890");
+        String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
-            PartialCutRequest corteRequest = new PartialCutRequest(
-                    "MAC00001",
-                    timestamp,
-                    "partial",
-                    userPhone,
-                    ventas
-            );
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        String userPhone = prefs.getString("telefonoUsuario", "1234567890");
 
-            String token = prefs.getString("accessToken", null);
+        PartialCutRequest corteRequest = new PartialCutRequest(
+                "MAC00001",
+                timestamp,
+                "partial",
+                userPhone,
+                ventas
+        );
 
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String jsonCorte = gson.toJson(corteRequest);
+        String token = prefs.getString("accessToken", null);
 
-            new AlertDialog.Builder(CobroActivity.this)
-                    .setTitle("JSON que se enviará")
-                    .setMessage(jsonCorte)
-                    .setPositiveButton("OK", null)
-                    .show();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonCorte = gson.toJson(corteRequest);
 
-            if (token != null) {
-                ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
-                    @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
-                        if (response.isSuccessful()) {
-                            Toast.makeText(CobroActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
+        new AlertDialog.Builder(CobroActivity.this)
+                .setTitle("JSON que se enviará")
+                .setMessage(jsonCorte)
+                .setPositiveButton("OK", null)
+                .show();
 
-                            int status = 1;
-                            StringBuilder resumenGuardado = new StringBuilder();
-                            resumenGuardado.append("Datos guardados localmente:\n\n");
+        if (token != null) {
+            ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if (response.isSuccessful()) {
+                        Toast.makeText(CobroActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
 
-                            for (SaleItem venta : ventas) {
-                                dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
-                                resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
-                                        .append("Fecha: ").append(timestamp).append("\n")
-                                        .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
-                                        .append("Cantidad: ").append(venta.getQuantity()).append("\n")
-                                        .append("Status: ").append(status).append("\n\n");
-                            }
+                        int status = 1;
+                        StringBuilder resumenGuardado = new StringBuilder();
+                        resumenGuardado.append("Datos guardados localmente:\n\n");
 
-                            new AlertDialog.Builder(CobroActivity.this)
-                                    .setTitle("Corte Parcial Guardado")
-                                    .setMessage(resumenGuardado.toString())
-                                    .setPositiveButton("OK", null)
-                                    .show();
-
-                        } else {
-                            Toast.makeText(CobroActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
-                            guardarCorteConError(userPhone, timestamp, ventas, 3);
+                        for (SaleItem venta : ventas) {
+                            dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
+                            resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
+                                    .append("Fecha: ").append(timestamp).append("\n")
+                                    .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
+                                    .append("Cantidad: ").append(venta.getQuantity()).append("\n")
+                                    .append("Status: ").append(status).append("\n\n");
                         }
-                    }
 
-                    @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
-                        Toast.makeText(CobroActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
+                        new AlertDialog.Builder(CobroActivity.this)
+                                .setTitle("Corte Parcial Guardado")
+                                .setMessage(resumenGuardado.toString())
+                                .setPositiveButton("OK", null)
+                                .show();
+
+                    } else {
+                        Toast.makeText(CobroActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
                         guardarCorteConError(userPhone, timestamp, ventas, 3);
+                        dbHelper.actualizarEstatusCortesParciales(3);
                     }
-                });
-            } else {
-                Toast.makeText(CobroActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
-            }
-        });
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Toast.makeText(CobroActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
+                    guardarCorteConError(userPhone, timestamp, ventas, 3);
+                    dbHelper.actualizarEstatusCortesParciales(3);
+                }
+            });
+        } else {
+            Toast.makeText(CobroActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
+        }
     }
+
 
 
     private void reproducirSonidoClick() {

@@ -21,7 +21,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 11;
+    private static final int DATABASE_VERSION = 12;
 
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
@@ -33,7 +33,9 @@ public class control_cortes extends SQLiteOpenHelper {
                     "total_normal REAL, " +
                     "total_estudiante REAL, " +
                     "total_tercera_edad REAL, " +
-                    "fecha_hora TEXT);";
+                    "fecha_hora TEXT, " +
+                    "status INTEGER, " +
+                    "totalCorte REAL);";
 
 
     //Tabla para detalles de corte parcial
@@ -93,7 +95,9 @@ public class control_cortes extends SQLiteOpenHelper {
                                      int pasajerosTerceraEdad,
                                      double totalNormal,
                                      double totalEstudiante,
-                                     double totalTerceraEdad) {
+                                     double totalTerceraEdad,
+                                     int status,
+                                     double totalCorte) {
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -105,6 +109,8 @@ public class control_cortes extends SQLiteOpenHelper {
         values.put("total_normal", totalNormal);
         values.put("total_estudiante", totalEstudiante);
         values.put("total_tercera_edad", totalTerceraEdad);
+        values.put("status", status);
+        values.put("totalCorte", totalCorte);
 
         // Fecha/hora actual
         String fechaHora = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
@@ -316,6 +322,16 @@ public class control_cortes extends SQLiteOpenHelper {
         values.put("status", nuevoEstatus);
 
         db.update("corte_total", values, "status = ?", new String[]{"1"}); // Actualiza solo los no enviados
+        db.close();
+    }
+
+    //Metodo para actualizar los metodos parciales que contienen informacion como cantidad de tickets y de precios
+    public void actualizarEstatusCortesParciales(int nuevoEstatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", nuevoEstatus);
+
+        db.update("cortes", values, "status = ?", new String[]{"1"}); // Actualiza solo los no enviados
         db.close();
     }
 
