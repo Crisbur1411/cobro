@@ -150,13 +150,22 @@ public class CortesActivity extends AppCompatActivity {
 
 
     //Metodo para enviar cortes no enviados, tanto finales como parciales
-    private void EnviarCortesNoEnviados(){
+    private void EnviarCortesNoEnviados() {
         reproducirSonidoClick(); // Opcional
-        //Obtenemos sharedPreferences
-        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
 
+        // Obtenemos sharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
         String timestampPartial = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
+        // Obtener los cortes parciales no enviados
+        List<JSONObject> cortesParcialesNoEnv = dbHelper.CortesParcialesNoEnviados();
+
+        // ✅ Si no hay cortes pendientes, mostrar mensaje y salir
+        if (cortesParcialesNoEnv.isEmpty()) {
+            Toast.makeText(CortesActivity.this, "No hay cortes parciales pendientes", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         JSONObject partialReportJson = new JSONObject();
         try {
@@ -165,7 +174,6 @@ public class CortesActivity extends AppCompatActivity {
             partialReportJson.put("type", "partial");
             partialReportJson.put("user", telefonoUsuario);
 
-            List<JSONObject> cortesParcialesNoEnv = dbHelper.CortesParcialesNoEnviados();
             JSONArray cortesNoEnviadosArray = new JSONArray(cortesParcialesNoEnv);
             partialReportJson.put("reports", cortesNoEnviadosArray);
 
@@ -191,9 +199,8 @@ public class CortesActivity extends AppCompatActivity {
                             Toast.makeText(CortesActivity.this, "Cortes Parciales enviados", Toast.LENGTH_SHORT).show();
                             dbHelper.actualizarEstatusCortesNoEnviados(1);
                             dbHelper.actualizarEstatusCortesParcialesASincronizado(1);
-
                         } else {
-                            Toast.makeText(CortesActivity.this, "Error al enviar cortes parciale: " + response.code(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CortesActivity.this, "Error al enviar cortes parciales: " + response.code(), Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -209,8 +216,8 @@ public class CortesActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
     }
+
 
     //Metodo para hacer corte total
     private void EnvioCorteTotal() {
@@ -333,6 +340,11 @@ public class CortesActivity extends AppCompatActivity {
 
                             dbHelper.actualizarEstatusCorteTotal(2);   //
                             // Guarda el JSON para reintento
+                            dbHelper.actualizarEstatusDetalleCorte(2);
+                            dbHelper.actualizarEstatusCorteTotal(2);   //
+                            dbHelper.actualizarEstatusCortesParcialesAEnviados(2);
+
+
                             SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
                             editor.putString("jsonPendiente", finalReportJson.toString());
                             editor.apply();
@@ -358,6 +370,12 @@ public class CortesActivity extends AppCompatActivity {
 
 
     private void reenviarCorteTotal(String jsonString) {
+        // ✅ Validar si el JSON está vacío o nulo
+        if (jsonString == null || jsonString.trim().isEmpty()) {
+            Toast.makeText(this, "No hay cortes totales pendientes", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         try {
             JSONObject json = new JSONObject(jsonString);
 
@@ -380,8 +398,6 @@ public class CortesActivity extends AppCompatActivity {
                                 public void onResponse(Call<Void> call, Response<Void> response) {
                                     if (response.isSuccessful()) {
                                         Toast.makeText(CortesActivity.this, "Reenvío exitoso", Toast.LENGTH_SHORT).show();
-                                        dbHelper.actualizarEstatusDetalleCorte(2);
-                                        //dbHelper.actualizarEstatusCorteTotal(2);   //
 
                                         // Borrar JSON guardado
                                         SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
@@ -411,6 +427,7 @@ public class CortesActivity extends AppCompatActivity {
             Toast.makeText(this, "Error al reconstruir JSON", Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
 
