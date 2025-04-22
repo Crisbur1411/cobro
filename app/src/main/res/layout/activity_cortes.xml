@@ -30,6 +30,22 @@
         app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
         app:layout_constraintStart_toStartOf="parent">
 
+
+        <TextView
+            android:id="@+id/btnVentas"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="8dp"
+            android:text="Ventas"
+            android:textAlignment="center"
+            android:textColor="@color/colorPrimary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+
         <TextView
             android:id="@+id/btnCortesParciales"
             android:layout_width="0dp"
@@ -37,10 +53,10 @@
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            android:gravity="start"
             android:padding="8dp"
             android:text="Cortes parciales"
-            android:textColor="@color/colorPrimary"
+            android:textAlignment="center"
+            android:textColor="@android:color/darker_gray"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -51,9 +67,9 @@
             android:layout_weight="1"
             android:clickable="true"
             android:focusable="true"
-            android:gravity="end"
             android:padding="8dp"
             android:text="Cortes totales"
+            android:textAlignment="center"
             android:textColor="@android:color/darker_gray"
             android:textSize="18sp"
             android:textStyle="bold" />

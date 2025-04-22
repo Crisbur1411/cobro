@@ -74,9 +74,10 @@ public class CortesActivity extends AppCompatActivity {
         //Boton de corte total
         btnCorteTotal = findViewById(R.id.btnCorteTotal);
 
-        //Botones mara mostrar los cortes parciales y totales
+        //Botones mara mostrar los cortes parciales, totales y ventas
         TextView btnParciales = findViewById(R.id.btnCortesParciales);
         TextView btnTotales = findViewById(R.id.btnCortesTotales);
+        TextView btnVentas = findViewById(R.id.btnVentas);
 
         //Lista de cortes totales
         listaTotales = findViewById(R.id.listViewCortes);
@@ -131,18 +132,31 @@ public class CortesActivity extends AppCompatActivity {
         btnParciales.setOnClickListener(v -> {
             btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
             btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+            btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 
 
+            List<CorteTotal> cortes = dbHelper.getCortesParciales();
+
+            CorteAdapter adapter = new CorteAdapter(this, cortes);
+            listaTotales.setAdapter(adapter);
         });
 
         btnTotales.setOnClickListener(v -> {
             btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
             btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+            btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 
             List<CorteTotal> cortes = dbHelper.getCortesTotales();
 
             CorteAdapter adapter = new CorteAdapter(this, cortes);
             listaTotales.setAdapter(adapter);
+        });
+
+        btnVentas.setOnClickListener(v -> {
+            btnTotales.setTextColor(ContextCompat.getColor(this,  android.R.color.darker_gray));
+            btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+            btnVentas.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+
         });
 
     }
@@ -341,7 +355,6 @@ public class CortesActivity extends AppCompatActivity {
                             dbHelper.actualizarEstatusCorteTotal(2);   //
                             // Guarda el JSON para reintento
                             dbHelper.actualizarEstatusDetalleCorte(2);
-                            dbHelper.actualizarEstatusCorteTotal(2);   //
                             dbHelper.actualizarEstatusCortesParcialesAEnviados(2);
 
 
@@ -398,6 +411,8 @@ public class CortesActivity extends AppCompatActivity {
                                 public void onResponse(Call<Void> call, Response<Void> response) {
                                     if (response.isSuccessful()) {
                                         Toast.makeText(CortesActivity.this, "Reenvío exitoso", Toast.LENGTH_SHORT).show();
+
+                                        dbHelper.actualizarEstatusCorteTotal(2);   //
 
                                         // Borrar JSON guardado
                                         SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();

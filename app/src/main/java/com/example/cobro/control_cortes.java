@@ -414,6 +414,46 @@ public class control_cortes extends SQLiteOpenHelper {
     }
 
 
+    public List<CorteTotal> getCortesParciales() {
+        List<CorteTotal> cortes = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM cortes WHERE status IN (1, 2, 3) ORDER BY fecha_hora DESC", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                int numeroCorte = cursor.getInt(cursor.getColumnIndexOrThrow("numero_corte"));
+                String fechaHora = cursor.getString(cursor.getColumnIndexOrThrow("fecha_hora"));
+                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
+                int normal = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_normal"));
+                double totalNormal = cursor.getDouble(cursor.getColumnIndexOrThrow("total_normal"));
+                int estudiante = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_estudiante"));
+                double totalEstudiante = cursor.getDouble(cursor.getColumnIndexOrThrow("total_estudiante"));
+                int terceraEdad = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_tercera_edad"));
+                double totalTercer = cursor.getDouble(cursor.getColumnIndexOrThrow("total_tercera_edad"));
+                double totalCorte = cursor.getDouble(cursor.getColumnIndexOrThrow("totalCorte"));
+
+                String nombre = "Corte Parcial #" + numeroCorte;
+
+                String info = "Fecha y hora: " + fechaHora + "\n" +
+                        "Pasaje Normal: " + normal + " - $" + String.format("%.2f", totalNormal) + "\n" +
+                        "Estudiante: " + estudiante + " - $" + String.format("%.2f", totalEstudiante) + "\n" +
+                        "Tercera Edad: " + terceraEdad + " - $" + String.format("%.2f", totalTercer) + "\n" +
+                        "Total Recaudado: $" + String.format("%.2f", totalCorte);
+
+                cortes.add(new CorteTotal(nombre, info, status));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return cortes;
+    }
+
+
+
+
 
 
 }

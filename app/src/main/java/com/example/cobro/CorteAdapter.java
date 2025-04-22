@@ -40,6 +40,8 @@ public class CorteAdapter extends ArrayAdapter<CorteTotal> {
             textNombre.setTextColor(Color.RED);
         } else if (corte.status == 2) {
             textNombre.setTextColor(Color.parseColor("#388E3C")); // verde oscuro
+        } else if (corte.status == 3) {
+            textNombre.setTextColor(Color.RED); // verde oscuro
         } else {
             textNombre.setTextColor(Color.BLACK);
         }
