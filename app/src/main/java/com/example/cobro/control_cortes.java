@@ -21,7 +21,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 13;
 
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
@@ -64,6 +64,15 @@ public class control_cortes extends SQLiteOpenHelper {
                     "total_recaudado REAL, " +
                     "status INTEGER);";
 
+    private static final String CREATE_BOLETOS_VENDIDOS =
+            "CREATE TABLE boletos_vendidos (" +
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "tipo TEXT, " +
+            "precio REAL, " +
+            "fecha TEXT, " +
+            "status INTEGER DEFAULT 0);";
+
+
 
 
     public control_cortes(Context context) {
@@ -75,6 +84,8 @@ public class control_cortes extends SQLiteOpenHelper {
         db.execSQL(TABLE_CREATE);
         db.execSQL(TABLE_CREATE_CORTE_DETALLE);
         db.execSQL(TABLE_CORTE_TOTAL);
+        db.execSQL(CREATE_BOLETOS_VENDIDOS);
+
     }
 
     @Override
@@ -82,6 +93,7 @@ public class control_cortes extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS cortes");
         db.execSQL("DROP TABLE IF EXISTS DetalleCorteParcial");
         db.execSQL("DROP TABLE IF EXISTS corte_total");
+        db.execSQL("DROP TABLE IF EXISTS boletos_vendidos");
         onCreate(db);
     }
 
@@ -143,6 +155,18 @@ public class control_cortes extends SQLiteOpenHelper {
         return resultado;
     }
 
+    public void insertarBoleto(String tipo, double precio, String fecha) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("tipo", tipo);
+        values.put("precio", precio);
+        values.put("fecha", fecha);
+        values.put("status", 0); // pendiente
+        db.insert("boletos_vendidos", null, values);
+        db.close();
+    }
+
+
 
 
     /**
@@ -161,6 +185,13 @@ public class control_cortes extends SQLiteOpenHelper {
                 "FROM cortes WHERE status = 1";
         return db.rawQuery(query, null);
     }
+
+
+    public Cursor obtenerBoletosVendidosPorTipo(String tipo) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM boletos_vendidos WHERE tipo = ? AND status = 0", new String[]{tipo});
+    }
+
 
     /**
      * Borra todos los registros de la tabla 'cortes'.
@@ -355,6 +386,15 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void actualizarEstatusBoletos(int nuevoEstatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", nuevoEstatus);
+
+        db.update("boletos_vendidos", values, "status = ?", new String[]{"0"}); // Actualiza solo los no enviados
+        db.close();
+    }
+
 
     //Metodo para detectar si existen cortes parciales pendientes para no permitir generar el corte total
     public boolean existenCortesPendientes() {
@@ -450,6 +490,38 @@ public class control_cortes extends SQLiteOpenHelper {
 
         return cortes;
     }
+
+
+    public List<CorteTotal> getVentas() {
+        List<CorteTotal> ventas = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM boletos_vendidos WHERE status = 0 ORDER BY fecha DESC", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                String tipo = cursor.getString(cursor.getColumnIndexOrThrow("tipo"));
+                double precio = cursor.getDouble(cursor.getColumnIndexOrThrow("precio"));
+                String fecha = cursor.getString(cursor.getColumnIndexOrThrow("fecha"));
+                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
+
+                String nombre = "Venta de boleto: " + tipo;
+
+                String info = "Fecha: " + fecha + "\n" +
+                        "Tipo: " + tipo + "\n" +
+                        "Precio: $" + String.format("%.2f", precio);
+
+                ventas.add(new CorteTotal(nombre, info, status));
+
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return ventas;
+    }
+
 
 
 

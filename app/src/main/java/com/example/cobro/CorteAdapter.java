@@ -35,15 +35,28 @@ public class CorteAdapter extends ArrayAdapter<CorteTotal> {
         textNombre.setText(corte.nombre);
         textInfo.setText(corte.info);
 
-        // Color del nombre según status
-        if (corte.status == 1) {
-            textNombre.setTextColor(Color.RED);
-        } else if (corte.status == 2) {
-            textNombre.setTextColor(Color.parseColor("#388E3C")); // verde oscuro
-        } else if (corte.status == 3) {
-            textNombre.setTextColor(Color.RED); // verde oscuro
+        // Si es un mensaje de "sin ventas", personaliza distinto
+        if (corte.nombre.equals("Sin ventas")) {
+            textNombre.setTextColor(Color.GRAY);
+            textNombre.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            textInfo.setVisibility(View.GONE);
         } else {
-            textNombre.setTextColor(Color.BLACK);
+            textInfo.setVisibility(View.VISIBLE);
+
+            // Color del nombre según status
+            if (corte.status == 1) {
+                textNombre.setTextColor(Color.RED);
+            } else if (corte.status == 2) {
+                textNombre.setTextColor(Color.parseColor("#388E3C")); // verde oscuro
+            } else if (corte.status == 3) {
+                textNombre.setTextColor(Color.RED);
+            } else if (corte.status == 0) {
+                textNombre.setTextColor(Color.BLACK);
+            } else {
+                textNombre.setTextColor(Color.BLACK);
+            }
+
+            textNombre.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         }
 
         return convertView;

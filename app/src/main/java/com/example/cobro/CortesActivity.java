@@ -57,6 +57,7 @@ public class CortesActivity extends AppCompatActivity {
 
     private LinearLayout Sincro_Totales;
     private ListView listaTotales;
+    private TextView btnParciales, btnTotales ,btnVentas;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,9 +76,10 @@ public class CortesActivity extends AppCompatActivity {
         btnCorteTotal = findViewById(R.id.btnCorteTotal);
 
         //Botones mara mostrar los cortes parciales, totales y ventas
-        TextView btnParciales = findViewById(R.id.btnCortesParciales);
-        TextView btnTotales = findViewById(R.id.btnCortesTotales);
-        TextView btnVentas = findViewById(R.id.btnVentas);
+        btnParciales = findViewById(R.id.btnCortesParciales);
+        btnTotales = findViewById(R.id.btnCortesTotales);
+        btnVentas = findViewById(R.id.btnVentas);
+
 
         //Lista de cortes totales
         listaTotales = findViewById(R.id.listViewCortes);
@@ -129,6 +131,11 @@ public class CortesActivity extends AppCompatActivity {
             }
         });
 
+
+        //Mostrar ventas por defecto
+        mostrarVentas();
+
+
         btnParciales.setOnClickListener(v -> {
             btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
             btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
@@ -153,13 +160,28 @@ public class CortesActivity extends AppCompatActivity {
         });
 
         btnVentas.setOnClickListener(v -> {
-            btnTotales.setTextColor(ContextCompat.getColor(this,  android.R.color.darker_gray));
-            btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-            btnVentas.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
-
+            mostrarVentas();
         });
 
     }
+
+
+    private void mostrarVentas() {
+        btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+        btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+        btnVentas.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+
+        List<CorteTotal> ventas = dbHelper.getVentas();
+
+        // Si está vacío, agregamos mensaje
+        if (ventas.isEmpty()) {
+            ventas.add(new CorteTotal("Sin ventas", "", 0));
+        }
+
+        CorteAdapter adapter = new CorteAdapter(this, ventas);
+        listaTotales.setAdapter(adapter);
+    }
+
 
 
 

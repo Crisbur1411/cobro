@@ -149,14 +149,7 @@ public class CobroActivity extends AppCompatActivity {
 
 
 
-        // Inicializar los acumuladores en 0
-        pasajerosPorTipo.put("Tercera Edad", 0);
-        pasajerosPorTipo.put("Pasaje Normal", 0);
-        pasajerosPorTipo.put("Estudiante", 0);
 
-        ingresosPorTipo.put("Tercera Edad", 0.0);
-        ingresosPorTipo.put("Pasaje Normal", 0.0);
-        ingresosPorTipo.put("Estudiante", 0.0);
 
         // Botones para incrementar y decrementar el contador
         btnMas.setOnClickListener(v -> {
@@ -211,19 +204,46 @@ public class CobroActivity extends AppCompatActivity {
     public void realizarCorteParcial() {
         reproducirSonidoClick();
 
-        int pasajerosNormal = pasajerosPorTipo.get("Pasaje Normal");
-        int pasajerosEstudiante = pasajerosPorTipo.get("Estudiante");
-        int pasajerosTercera = pasajerosPorTipo.get("Tercera Edad");
+        // Obtener el número de corte parcial almacenado
+        int numeroCorteParcial = obtenerNumeroCorteParcial();
 
-        // ✅ Validar si no hay ningún pasajero registrado
-        if (pasajerosNormal == 0 && pasajerosEstudiante == 0 && pasajerosTercera == 0) {
-            Toast.makeText(this, "No se puede realizar el corte parcial porque no se han generado tickets", Toast.LENGTH_LONG).show();
-            return;
+        // Consultar boletos vendidos por tipo desde la base de datos
+        int pasajerosNormal = 0;
+        int pasajerosEstudiante = 0;
+        int pasajerosTercera = 0;
+        double totalNormal = 0;
+        double totalEstudiante = 0;
+        double totalTercera = 0;
+
+        // Consultas y procesamiento de boletos vendidos (como antes)
+        Cursor cursorNormal = dbHelper.obtenerBoletosVendidosPorTipo("Pasaje Normal");
+        if (cursorNormal != null) {
+            while (cursorNormal.moveToNext()) {
+                pasajerosNormal++;
+                totalNormal += cursorNormal.getDouble(cursorNormal.getColumnIndex("precio"));
+            }
+            cursorNormal.close();
         }
 
-        double totalNormal = ingresosPorTipo.get("Pasaje Normal");
-        double totalEstudiante = ingresosPorTipo.get("Estudiante");
-        double totalTercera = ingresosPorTipo.get("Tercera Edad");
+        Cursor cursorEstudiante = dbHelper.obtenerBoletosVendidosPorTipo("Estudiante");
+        if (cursorEstudiante != null) {
+            while (cursorEstudiante.moveToNext()) {
+                pasajerosEstudiante++;
+                totalEstudiante += cursorEstudiante.getDouble(cursorEstudiante.getColumnIndex("precio"));
+            }
+            cursorEstudiante.close();
+        }
+
+        Cursor cursorTercera = dbHelper.obtenerBoletosVendidosPorTipo("Tercera Edad");
+        if (cursorTercera != null) {
+            while (cursorTercera.moveToNext()) {
+                pasajerosTercera++;
+                totalTercera += cursorTercera.getDouble(cursorTercera.getColumnIndex("precio"));
+            }
+            cursorTercera.close();
+        }
+
+        // Validación y guardado del corte parcial (como antes)
         double totalCorte = totalNormal + totalEstudiante + totalTercera;
         int status = 1;
 
@@ -252,8 +272,10 @@ public class CobroActivity extends AppCompatActivity {
             showTextDialog("Corte Parcial #" + numeroCorteParcial, contenido.toString());
             printTicket(contenido.toString());
 
+            // Incrementar el número de corte parcial y guardarlo
             numeroCorteParcial++;
-            resetAcumuladores();
+            guardarNumeroCorteParcial(numeroCorteParcial); // Guardar el número actualizado
+
         } else {
             Toast.makeText(this, "Error al guardar el corte parcial", Toast.LENGTH_SHORT).show();
         }
@@ -296,6 +318,7 @@ public class CobroActivity extends AppCompatActivity {
                 public void onResponse(Call<Void> call, Response<Void> response) {
                     if (response.isSuccessful()) {
                         Toast.makeText(CobroActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
+                        dbHelper.actualizarEstatusBoletos(1);   //
 
                         int status = 1;
                         StringBuilder resumenGuardado = new StringBuilder();
@@ -320,6 +343,8 @@ public class CobroActivity extends AppCompatActivity {
                         Toast.makeText(CobroActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
                         guardarCorteConError(userPhone, timestamp, ventas, 3);
                         dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
+                        dbHelper.actualizarEstatusBoletos(1);   //
+
                     }
                 }
 
@@ -328,6 +353,8 @@ public class CobroActivity extends AppCompatActivity {
                     Toast.makeText(CobroActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
                     guardarCorteConError(userPhone, timestamp, ventas, 3);
                     dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
+                    dbHelper.actualizarEstatusBoletos(1);   //
+
                 }
             });
         } else {
@@ -335,6 +362,20 @@ public class CobroActivity extends AppCompatActivity {
         }
     }
 
+
+    // Guardar el número de corte parcial en SharedPreferences
+    private void guardarNumeroCorteParcial(int numeroCorteParcial) {
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("numeroCorteParcial", numeroCorteParcial);
+        editor.apply();
+    }
+
+    // Obtener el número de corte parcial desde SharedPreferences
+    private int obtenerNumeroCorteParcial() {
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        return prefs.getInt("numeroCorteParcial", 1); // Default a 1 si no existe
+    }
 
 
     private void reproducirSonidoClick() {
@@ -388,33 +429,21 @@ public class CobroActivity extends AppCompatActivity {
     // Contador de transacciones
     private int numeroTransaccion = 1;
 
-    /**
-     * Actualiza el TextView para mostrar la última transacción en formato específico.
-     */
-
+    public String obtenerFechaActual() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
 
 
     /**
      * Acumula la venta en los mapas para los cortes.
      */
-    public void acumularVenta(String tipo, int precio) {
-        int currentCount = pasajerosPorTipo.get(tipo);
-        double currentIncome = ingresosPorTipo.get(tipo);
-        pasajerosPorTipo.put(tipo, currentCount + contador);
-        ingresosPorTipo.put(tipo, currentIncome + (precio * contador));
-    }
-
-    /**
-     * Reinicia los acumuladores de ventas a 0.
-     */
-    public void resetAcumuladores() {
-        pasajerosPorTipo.put("Tercera Edad", 0);
-        pasajerosPorTipo.put("Pasaje Normal", 0);
-        pasajerosPorTipo.put("Estudiante", 0);
-
-        ingresosPorTipo.put("Tercera Edad", 0.0);
-        ingresosPorTipo.put("Pasaje Normal", 0.0);
-        ingresosPorTipo.put("Estudiante", 0.0);
+    public void acumularVenta(String tipo, double precio) {
+        String fecha = obtenerFechaActual();
+        for (int i = 0; i < contador; i++) {
+            dbHelper.insertarBoleto(tipo, precio, fecha);
+        }
     }
 
     /**
