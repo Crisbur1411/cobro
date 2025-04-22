@@ -158,7 +158,7 @@ public class control_cortes extends SQLiteOpenHelper {
                 "SUM(total_normal) AS sumTN, " +
                 "SUM(total_estudiante) AS sumTE, " +
                 "SUM(total_tercera_edad) AS sumTTE " +
-                "FROM cortes";
+                "FROM cortes WHERE status = 1";
         return db.rawQuery(query, null);
     }
 
@@ -325,8 +325,8 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
-    //Metodo para actualizar los metodos parciales que contienen informacion como cantidad de tickets y de precios
-    public void actualizarEstatusCortesParciales(int nuevoEstatus) {
+    //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 3 para no sincornizados
+    public void actualizarEstatusCortesParcialesNoSincronizados(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("status", nuevoEstatus);
@@ -334,6 +334,37 @@ public class control_cortes extends SQLiteOpenHelper {
         db.update("cortes", values, "status = ?", new String[]{"1"}); // Actualiza solo los no enviados
         db.close();
     }
+
+    //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 1 para sincornizados
+    public void actualizarEstatusCortesParcialesASincronizado(int nuevoEstatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", nuevoEstatus);
+
+        db.update("cortes", values, "status = ?", new String[]{"3"}); // Actualiza solo los no enviados
+        db.close();
+    }
+
+
+    public void actualizarEstatusCortesParcialesAEnviados(int nuevoEstatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", nuevoEstatus);
+
+        db.update("cortes", values, "status = ?", new String[]{"1"}); // Actualiza solo los no enviados
+        db.close();
+    }
+
+
+    //Metodo para detectar si existen cortes parciales pendientes para no permitir generar el corte total
+    public boolean existenCortesPendientes() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT id FROM cortes WHERE status = 3 LIMIT 1", null);
+        boolean existenPendientes = (cursor != null && cursor.moveToFirst());
+        if (cursor != null) cursor.close();
+        return existenPendientes;
+    }
+
 
 
 

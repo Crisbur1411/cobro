@@ -189,7 +189,9 @@ public class CortesActivity extends AppCompatActivity {
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if (response.isSuccessful()) {
                             Toast.makeText(CortesActivity.this, "Cortes Parciales enviados", Toast.LENGTH_SHORT).show();
-                            dbHelper.actualizarEstatusCortesNoEnviados(2);
+                            dbHelper.actualizarEstatusCortesNoEnviados(1);
+                            dbHelper.actualizarEstatusCortesParcialesASincronizado(1);
+
                         } else {
                             Toast.makeText(CortesActivity.this, "Error al enviar cortes parciale: " + response.code(), Toast.LENGTH_SHORT).show();
                         }
@@ -217,6 +219,13 @@ public class CortesActivity extends AppCompatActivity {
         //Obtenemos SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
 
+        // Verificar si existen cortes parciales pendientes (status = 3)
+        if (dbHelper.existenCortesPendientes()) {
+            Toast.makeText(this, "❗ Primero sincroniza los cortes parciales pendientes.", Toast.LENGTH_LONG).show();
+            return; // Detiene la ejecución del método
+        }
+
+
         Cursor cursor = dbHelper.getResumenCortes();
         if (cursor != null && cursor.moveToFirst()) {
             int totalPasajerosNormal = cursor.getInt(cursor.getColumnIndex("sumPN"));
@@ -226,6 +235,13 @@ public class CortesActivity extends AppCompatActivity {
             double totalEstudiante = cursor.getDouble(cursor.getColumnIndex("sumTE"));
             double totalTercera = cursor.getDouble(cursor.getColumnIndex("sumTTE"));
             cursor.close();
+
+            // 🔽 Verificación si todo está en cero
+            if (totalPasajerosNormal == 0 && totalPasajerosEstudiante == 0 && totalPasajerosTercera == 0 &&
+                    totalNormal == 0.0 && totalEstudiante == 0.0 && totalTercera == 0.0) {
+                Toast.makeText(this, "❌ No se puede generar el corte total porque no hubo ventas.", Toast.LENGTH_LONG).show();
+                return; // Detiene la ejecución del método
+            }
 
             StringBuilder contenido = new StringBuilder();
             String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
@@ -304,6 +320,7 @@ public class CortesActivity extends AppCompatActivity {
                                 // 👇 Cambia estatus a 2 los que se enviaron
                                 dbHelper.actualizarEstatusDetalleCorte(2);
                                 dbHelper.actualizarEstatusCorteTotal(2);   //
+                                dbHelper.actualizarEstatusCortesParcialesAEnviados(2);
 
                             } else {
                                 Toast.makeText(CortesActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
@@ -314,6 +331,7 @@ public class CortesActivity extends AppCompatActivity {
                         public void onFailure(Call<Void> call, Throwable t) {
                             Toast.makeText(CortesActivity.this, "Fallo de red. Los cortes parciales se enviarán cuando la red esté disponible", Toast.LENGTH_SHORT).show();
 
+                            dbHelper.actualizarEstatusCorteTotal(2);   //
                             // Guarda el JSON para reintento
                             SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
                             editor.putString("jsonPendiente", finalReportJson.toString());
@@ -333,8 +351,8 @@ public class CortesActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "No hay cortes registrados en la BD", Toast.LENGTH_SHORT).show();
         }
-        dbHelper.borrarCortes(); // Reinicia los cortes
-        Toast.makeText(this, "Se reiniciaron los cortes parciales para el día.", Toast.LENGTH_SHORT).show();
+        //dbHelper.borrarCortes(); // Reinicia los cortes
+        //Toast.makeText(this, "Se reiniciaron los cortes parciales para el día.", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -363,7 +381,7 @@ public class CortesActivity extends AppCompatActivity {
                                     if (response.isSuccessful()) {
                                         Toast.makeText(CortesActivity.this, "Reenvío exitoso", Toast.LENGTH_SHORT).show();
                                         dbHelper.actualizarEstatusDetalleCorte(2);
-                                        dbHelper.actualizarEstatusCorteTotal(2);   //
+                                        //dbHelper.actualizarEstatusCorteTotal(2);   //
 
                                         // Borrar JSON guardado
                                         SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();

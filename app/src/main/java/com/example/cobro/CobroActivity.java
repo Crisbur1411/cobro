@@ -319,7 +319,7 @@ public class CobroActivity extends AppCompatActivity {
                     } else {
                         Toast.makeText(CobroActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
                         guardarCorteConError(userPhone, timestamp, ventas, 3);
-                        dbHelper.actualizarEstatusCortesParciales(3);
+                        dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
                     }
                 }
 
@@ -327,7 +327,7 @@ public class CobroActivity extends AppCompatActivity {
                 public void onFailure(Call<Void> call, Throwable t) {
                     Toast.makeText(CobroActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
                     guardarCorteConError(userPhone, timestamp, ventas, 3);
-                    dbHelper.actualizarEstatusCortesParciales(3);
+                    dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
                 }
             });
         } else {
