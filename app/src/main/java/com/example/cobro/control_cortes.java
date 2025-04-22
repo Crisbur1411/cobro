@@ -332,15 +332,16 @@ public class control_cortes extends SQLiteOpenHelper {
      */
 
 
-    public List<String> getCortesTotales() {
-        List<String> cortes = new ArrayList<>();
+    public List<CorteTotal> getCortesTotales() {
+        List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM corte_total WHERE status = 2 ", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM corte_total WHERE status IN (1, 2) ORDER BY fecha_hora DESC", null);
 
         if (cursor.moveToFirst()) {
             do {
                 String nombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre"));
                 String fechaHora = cursor.getString(cursor.getColumnIndexOrThrow("fecha_hora"));
+                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
                 int normal = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_normal"));
                 double totalNormal = cursor.getDouble(cursor.getColumnIndexOrThrow("total_normal"));
                 int estudiante = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_estudiante"));
@@ -349,14 +350,13 @@ public class control_cortes extends SQLiteOpenHelper {
                 double totalTercer = cursor.getDouble(cursor.getColumnIndexOrThrow("total_tercera_edad"));
                 double totalRecaudado = cursor.getDouble(cursor.getColumnIndexOrThrow("total_recaudado"));
 
-                String corte =nombre + "\n" +
-                        "Fecha y hora: " + fechaHora + "\n" +
+                String info = "Fecha y hora: " + fechaHora + "\n" +
                         "Pasaje Normal: " + normal + " - $" + String.format("%.2f", totalNormal) + "\n" +
                         "Estudiante: " + estudiante + " - $" + String.format("%.2f", totalEstudiante) + "\n" +
                         "Tercera Edad: " + terceraEdad + " - $" + String.format("%.2f", totalTercer) + "\n" +
                         "Total Recaudado: $" + String.format("%.2f", totalRecaudado);
 
-                cortes.add(corte);
+                cortes.add(new CorteTotal(nombre, info, status));
             } while (cursor.moveToNext());
         }
 
@@ -365,6 +365,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
         return cortes;
     }
+
 
 
 

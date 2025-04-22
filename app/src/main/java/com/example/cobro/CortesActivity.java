@@ -139,16 +139,10 @@ public class CortesActivity extends AppCompatActivity {
             btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
             btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 
-            List<String> cortes = dbHelper.getCortesTotales(); // metodo para obtener cortes totales
+            List<CorteTotal> cortes = dbHelper.getCortesTotales();
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                    this,
-                    android.R.layout.simple_list_item_1,
-                    cortes
-            );
-
+            CorteAdapter adapter = new CorteAdapter(this, cortes);
             listaTotales.setAdapter(adapter);
-
         });
 
     }
