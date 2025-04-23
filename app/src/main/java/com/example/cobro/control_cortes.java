@@ -485,7 +485,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
                 String nombre = "Corte Parcial #" + numeroCorte;
 
-                String info = "Fecha y hora: " + fechaHora + "\n" +
+                String info = "Fecha y hora:" + fechaHora + "\n" +
                         "Pasaje Normal: " + normal + " - $" + String.format("%.2f", totalNormal) + "\n" +
                         "Estudiante: " + estudiante + " - $" + String.format("%.2f", totalEstudiante) + "\n" +
                         "Tercera Edad: " + terceraEdad + " - $" + String.format("%.2f", totalTercer) + "\n" +

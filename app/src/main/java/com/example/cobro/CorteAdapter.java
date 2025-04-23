@@ -79,11 +79,8 @@ public class CorteAdapter extends ArrayAdapter<CorteTotal> {
             String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
 
             contenido.append(corte.nombre).append("\n")  // Nombre del corte (Parcial o Total)
-                    .append("Fecha y Hora de Reimpresión: ").append(fechaHora).append("\n\n")
+                    .append("Fecha y Hora de Reimpresion:\n").append(fechaHora).append("\n\n")
                     .append(corte.info);  // Información extraída del DB
-
-            // Mostrar el contenido del ticket (opcional, como un diálogo)
-            showTextDialog("Detalle del " + corte.nombre, contenido.toString());
 
             // Enviar el contenido a imprimir
             printTicket(contenido.toString());
