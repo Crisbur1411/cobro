@@ -112,8 +112,8 @@
         android:id="@+id/textViewWithIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="104dp"
-        android:layout_marginEnd="200dp"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="204dp"
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
@@ -147,12 +147,12 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginStart="28dp"
-        android:layout_marginBottom="692dp"
+        android:layout_marginTop="10dp"
         android:text="Estado"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/btnCorteTotal"
@@ -172,6 +172,21 @@
         android:layout_height="418dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layoutCortes" />
+
+
+    <Button
+        android:id="@+id/btnCorteParcial"
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:background="@drawable/button_border"
+        android:text="@string/btn_parcial"
+        android:textSize="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.237"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.152" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
