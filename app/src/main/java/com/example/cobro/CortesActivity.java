@@ -587,7 +587,7 @@ public class CortesActivity extends AppCompatActivity {
                         public void onFailure(Call<Void> call, Throwable t) {
                             Toast.makeText(CortesActivity.this, "Fallo de red. Los cortes parciales se enviarán cuando la red esté disponible", Toast.LENGTH_SHORT).show();
 
-                            dbHelper.actualizarEstatusCorteTotal(2);   //
+                            dbHelper.actualizarEstatusCorteTotal(3);   //
                             // Guarda el JSON para reintento
                             dbHelper.actualizarEstatusDetalleCorte(2);
                             dbHelper.actualizarEstatusCortesParcialesAEnviados(2);
@@ -647,7 +647,7 @@ public class CortesActivity extends AppCompatActivity {
                                     if (response.isSuccessful()) {
                                         Toast.makeText(CortesActivity.this, "Reenvío exitoso", Toast.LENGTH_SHORT).show();
 
-                                        dbHelper.actualizarEstatusCorteTotal(2);   //
+                                        dbHelper.actualizarEstatusCorteTotalNoEnviado(2);   //
 
                                         // Borrar JSON guardado
                                         SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();

@@ -356,6 +356,16 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
+
+    public void actualizarEstatusCorteTotalNoEnviado(int nuevoEstatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", nuevoEstatus);
+
+        db.update("corte_total", values, "status = ?", new String[]{"3"}); // Actualiza solo los no enviados
+        db.close();
+    }
+
     //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 3 para no sincornizados
     public void actualizarEstatusCortesParcialesNoSincronizados(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -422,7 +432,7 @@ public class control_cortes extends SQLiteOpenHelper {
     public List<CorteTotal> getCortesTotales() {
         List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM corte_total WHERE status IN (1, 2) ORDER BY fecha_hora DESC", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM corte_total WHERE status IN (1, 2, 3) ORDER BY fecha_hora DESC", null);
 
         if (cursor.moveToFirst()) {
             do {

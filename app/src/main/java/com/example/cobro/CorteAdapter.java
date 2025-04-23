@@ -45,7 +45,7 @@ public class CorteAdapter extends ArrayAdapter<CorteTotal> {
 
             // Color del nombre según status
             if (corte.status == 1) {
-                textNombre.setTextColor(Color.RED);
+                textNombre.setTextColor(Color.parseColor("#388E3C"));
             } else if (corte.status == 2) {
                 textNombre.setTextColor(Color.parseColor("#388E3C")); // verde oscuro
             } else if (corte.status == 3) {
