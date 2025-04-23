@@ -380,7 +380,7 @@ public class CobroActivity extends AppCompatActivity {
 
                 return;
             }
-            tvEstadoConexion.setText("✅ Conectado:");
+            tvEstadoConexion.setText("✅ Conectado");
             tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {
             tvEstadoConexion.setText("⚠️ Desconectado");

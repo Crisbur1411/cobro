@@ -122,6 +122,7 @@ public class CortesActivity extends AppCompatActivity {
             EnviarCortesNoEnviados();
         });
 
+        actualizarEstadoConexion();
 
 
         Sincro_Totales.setOnClickListener(v -> {
@@ -739,6 +740,11 @@ public class CortesActivity extends AppCompatActivity {
     private boolean isBluetoothConnected() {
         return Bluetooth.bluetoothSocket != null && Bluetooth.bluetoothSocket.isConnected();
     }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        actualizarEstadoConexion(); // Actualizar conexión al volver a la pantalla
+    }
 
     /**
      * Actualiza el estado de la conexión Bluetooth en pantalla
@@ -749,7 +755,7 @@ public class CortesActivity extends AppCompatActivity {
 
                 return;
             }
-            tvEstadoConexion.setText("✅ Conectado:");
+            tvEstadoConexion.setText("✅ Conectado");
             tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {
             tvEstadoConexion.setText("⚠️ Desconectado");
