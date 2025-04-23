@@ -27,7 +27,7 @@ public class PrecargaActivity extends AppCompatActivity {
             startActivity(new Intent(PrecargaActivity.this, MainActivity.class ));
             finish();
             }
-        }, 3000);
+        }, 1000);
 
 
 

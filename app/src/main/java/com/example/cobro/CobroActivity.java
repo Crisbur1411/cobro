@@ -74,6 +74,10 @@ public class CobroActivity extends AppCompatActivity {
     private String passwordUsuario; // Variable para almacenar la contraseña
     private MediaPlayer sonidoClick;
 
+    private SharedPreferences prefs;     //Se declara SharedPreferences
+
+    private int numeroTransaccion;
+
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +131,12 @@ public class CobroActivity extends AppCompatActivity {
                 Toast.makeText(this, "⚠️ No se recibió contraseña.", Toast.LENGTH_SHORT).show();
             }
         }
+
+
+        //Se inicializa el número de transacción
+        prefs = getSharedPreferences("MisPreferencias", MODE_PRIVATE);
+        numeroTransaccion = prefs.getInt("numeroTransaccion", 1);  // valor 1
+
 
 
         // Actualizar el estado al iniciar
@@ -231,8 +241,6 @@ public class CobroActivity extends AppCompatActivity {
         actualizarEstadoConexion(); // Actualizar conexión al volver a la pantalla
     }
 
-    // Contador de transacciones
-    private int numeroTransaccion = 1;
 
     public String obtenerFechaActual() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
@@ -258,6 +266,8 @@ public class CobroActivity extends AppCompatActivity {
         contador = 1;
         tvNumero.setText(String.valueOf(contador));
     }
+
+
 
     /**
      * Genera un ticket individual en formato de texto y lo muestra en un diálogo.
@@ -296,21 +306,32 @@ public class CobroActivity extends AppCompatActivity {
                 break;
         }
 
-        // Mostrar un solo resumen en pantalla
-        String resumenTransaccion = "TICKET #" + numeroTransaccion + "\n" + cantidad + " " + tipo  + "  MXN$" + total + "  " + fechaHora;
+        // Mostrar resumen en pantalla
+        String resumenTransaccion = "TICKET #" + numeroTransaccion + "\n" + cantidad + " " + tipo + "  MXN$" + total + " - " + fechaHora;
         tvUltimaTransaccion.setText(resumenTransaccion);
         showTextDialog("Ticket " + tipo, resumenTransaccion);
 
-        // 🔁 Imprimir un ticket por cada boleto
         for (int i = 0; i < cantidad; i++) {
             String mensajeIndividual = "#" + numeroTransaccion + "\n" + "Tipo : " + tipo + "\n"
-            +"Costo : $ "        + precio + "\n" + "Hora y Fecha: " + fechaHora + "\n" +
-                    "----------------------------------------" + "\n"
+                    + "Costo : $ " + precio + "\n" + "Hora y Fecha: " + fechaHora + "\n"
+                    + "----------------------------------------\n"
                     + "Este Boleto ampara el Seguro del Viajero";
             printTicket(mensajeIndividual);
-            numeroTransaccion++; // 👈 Importante: aumenta con cada boleto individual
+            numeroTransaccion++;
+
+            // Guardar el nuevo número en SharedPreferences
+            prefs.edit().putInt("numeroTransaccion", numeroTransaccion).apply();
         }
     }
+
+    /*
+
+    //Metodo de Reiniciar Contador (Esto solo en caso de ser necesario)
+    private void reiniciarTransacciones() {
+        numeroTransaccion = 1;
+        prefs.edit().putInt("numeroTransaccion", numeroTransaccion).apply();
+    }
+     */
 
 
 
