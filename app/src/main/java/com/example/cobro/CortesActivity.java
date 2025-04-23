@@ -493,7 +493,7 @@ public class CortesActivity extends AppCompatActivity {
             double totalTercera = cursor.getDouble(cursor.getColumnIndex("sumTTE"));
             cursor.close();
 
-            // 🔽 Verificación si todo está en cero
+            // Verificación si los valores o ventas estan en cero
             if (totalPasajerosNormal == 0 && totalPasajerosEstudiante == 0 && totalPasajerosTercera == 0 &&
                     totalNormal == 0.0 && totalEstudiante == 0.0 && totalTercera == 0.0) {
                 Toast.makeText(this, "❌ No se puede generar el corte total porque no hubo ventas.", Toast.LENGTH_LONG).show();

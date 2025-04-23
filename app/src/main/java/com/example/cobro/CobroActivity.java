@@ -51,20 +51,13 @@ public class CobroActivity extends AppCompatActivity {
 
     private TextView tvNumero;
     private int contador = 1; // Cantidad de boletos en venta individual
-    private LinearLayout btnPasajeNormal, btnEstudiante, btnTerceraEdad;
-    private Button btnCorteParcial, btnCorteTotal;
+    private LinearLayout btnPasajeNormal, btnEstudiante, btnTerceraEdad; //Botones para generar tickets
 
     // Precios fijos
     private static final int PRECIO_NORMAL = 18;
     private static final int PRECIO_ESTUDIANTE = 12;
     private static final int PRECIO_TERCERA_EDAD = 5;
 
-    // Acumuladores para ventas (desde el último corte parcial)
-    private final Map<String, Integer> pasajerosPorTipo = new HashMap<>();
-    private final Map<String, Double> ingresosPorTipo = new HashMap<>();
-
-    // Contador para numerar los cortes parciales
-    private int numeroCorteParcial = 1;
 
     // Instancia de la clase que maneja la BD para cortes parciales
     private control_cortes dbHelper;
@@ -151,8 +144,6 @@ public class CobroActivity extends AppCompatActivity {
         btnTerceraEdad = findViewById(R.id.btnTerceraEdad);
         btnPasajeNormal = findViewById(R.id.btnPasajeNormal);
         btnEstudiante = findViewById(R.id.btnEstudiante);
-        btnCorteParcial = findViewById(R.id.btnCorteParcial);
-        btnCorteTotal = findViewById(R.id.btnCorteTotal);
         tvNumero = findViewById(R.id.tvNumero);
 
         tvNumero.setText(String.valueOf(contador));
