@@ -35,6 +35,11 @@
     <string name="lbl_reenvio">Sincronizar Cortes Parciales</string>
     <string name="lbl_reenvio_total">Sincronizar Cortes Totales</string>
 
+    <string name="lbl_normal">Normal</string>
+    <string name="lbl_estudiante">Estudiante</string>
+    <string name="lbl_tercera_edad">Tercera Edad</string>
+
+
 
 
 </resources>

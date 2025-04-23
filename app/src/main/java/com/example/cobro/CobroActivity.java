@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.View;
@@ -50,7 +51,7 @@ public class CobroActivity extends AppCompatActivity {
 
     private TextView tvNumero;
     private int contador = 1; // Cantidad de boletos en venta individual
-    private Button btnTerceraEdad, btnPasajeNormal, btnEstudiante;
+    private LinearLayout btnPasajeNormal, btnEstudiante, btnTerceraEdad;
     private Button btnCorteParcial, btnCorteTotal;
 
     // Precios fijos
