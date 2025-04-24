@@ -272,14 +272,7 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortesEstructurados;
     }
 
-    public void actualizarEstatusDetalleCorte(int nuevoStatus) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("status", nuevoStatus);
-        // Solo actualiza los que están en estatus 1 (pendientes)
-        db.update("DetalleCorteParcial", values, "status = ?", new String[]{"1"});
-        db.close();
-    }
+
 
 
     //Obtener todos los cortes parciales y estructurarlos en formato json
@@ -338,6 +331,16 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortesEstructurados;
     }
 
+
+    public void actualizarEstatusDetalleCorte(int nuevoStatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", nuevoStatus);
+        // Solo actualiza los que están en estatus 1 (pendientes)
+        db.update("DetalleCorteParcial", values, "status = ?", new String[]{"1"});
+        db.close();
+    }
+
     public void actualizarEstatusCortesNoEnviados(int nuevoStatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -366,17 +369,28 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
+
+    //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 1 para ser utilizados en corte total
+    public void actualizarEstatusCortesParcialesParaCorteTotal(int nuevoEstatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", nuevoEstatus);
+
+        db.update("cortes", values, "status = ?", new String[]{"0"}); // Actualiza solo los no enviados
+        db.close();
+    }
+
     //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 3 para no sincornizados
     public void actualizarEstatusCortesParcialesNoSincronizados(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("status", nuevoEstatus);
 
-        db.update("cortes", values, "status = ?", new String[]{"1"}); // Actualiza solo los no enviados
+        db.update("cortes", values, "status = ?", new String[]{"0"}); // Actualiza solo los no enviados
         db.close();
     }
 
-    //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 1 para sincornizados
+    //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 1 para sincornizados y ser usados por corte total
     public void actualizarEstatusCortesParcialesASincronizado(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();

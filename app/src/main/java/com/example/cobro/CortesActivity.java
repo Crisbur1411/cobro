@@ -55,6 +55,8 @@ public class CortesActivity extends AppCompatActivity {
     private Button btnCorteParcial, btnCorteTotal;
 
     private TextView tvEstadoConexion;
+    private CorteAdapter corteAdapter;
+
 
     private LinearLayout Sincro_Totales;
     private ListView listaTotales;
@@ -146,26 +148,11 @@ public class CortesActivity extends AppCompatActivity {
 
 
         btnParciales.setOnClickListener(v -> {
-            btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
-            btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-            btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-
-
-            List<CorteTotal> cortes = dbHelper.getCortesParciales();
-
-            CorteAdapter adapter = new CorteAdapter(this, cortes, true);
-            listaTotales.setAdapter(adapter);
+            cargaCortesParciales();
         });
 
         btnTotales.setOnClickListener(v -> {
-            btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
-            btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-            btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-
-            List<CorteTotal> cortes = dbHelper.getCortesTotales();
-
-            CorteAdapter adapter = new CorteAdapter(this, cortes, true);
-            listaTotales.setAdapter(adapter);
+            cargaCortesTotales();
         });
 
         btnVentas.setOnClickListener(v -> {
@@ -192,6 +179,29 @@ public class CortesActivity extends AppCompatActivity {
         }
 
         CorteAdapter adapter = new CorteAdapter(this, ventas, false);
+        listaTotales.setAdapter(adapter);
+    }
+
+    private void cargaCortesParciales(){
+        btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+        btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+
+        List<CorteTotal> cortes = dbHelper.getCortesParciales();
+
+        CorteAdapter adapter = new CorteAdapter(this, cortes, true);
+        listaTotales.setAdapter(adapter);
+
+    }
+
+    private void cargaCortesTotales(){
+        btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+        btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+
+        List<CorteTotal> cortes = dbHelper.getCortesTotales();
+
+        CorteAdapter adapter = new CorteAdapter(this, cortes, true);
         listaTotales.setAdapter(adapter);
     }
 
@@ -248,7 +258,7 @@ public class CortesActivity extends AppCompatActivity {
 
         // Validación y guardado del corte parcial (como antes)
         double totalCorte = totalNormal + totalEstudiante + totalTercera;
-        int status = 1;
+        int status = 0;
 
         long id = dbHelper.insertarCorteParcial(
                 numeroCorteParcial,
@@ -315,13 +325,18 @@ public class CortesActivity extends AppCompatActivity {
                 .setPositiveButton("OK", null)
                 .show();
 
+        cargaCortesParciales();
+
+
         if (token != null) {
             ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
                 @Override
                 public void onResponse(Call<Void> call, Response<Void> response) {
                     if (response.isSuccessful()) {
                         Toast.makeText(CortesActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
-                        dbHelper.actualizarEstatusBoletos(1);   //
+                        dbHelper.actualizarEstatusBoletos(1);   // Actualiza el estatus de los boletos a uno para ya no ser mostrados ni enviados al corte parcial
+                        dbHelper.actualizarEstatusCortesParcialesParaCorteTotal(1); //Actualiza el estatus de los cortes parciales a 1 para ser tomados por el corte total
+
 
                         int status = 1;
                         StringBuilder resumenGuardado = new StringBuilder();
@@ -463,6 +478,9 @@ public class CortesActivity extends AppCompatActivity {
             //Obtener token mas reciente
             String token = TokenManager.getToken(this);
 
+            cargaCortesParciales();
+
+
             if (token != null) {
                 ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
                     @Override
@@ -587,6 +605,7 @@ public class CortesActivity extends AppCompatActivity {
                 //Se obtiene el token mas reciente
                 String token = TokenManager.getToken(this);
 
+                cargaCortesTotales();
 
                 // Enviar al backend si hay token
                 if (token != null) {
@@ -670,6 +689,8 @@ public class CortesActivity extends AppCompatActivity {
                                         Toast.makeText(CortesActivity.this, "Reenvío exitoso", Toast.LENGTH_SHORT).show();
 
                                         dbHelper.actualizarEstatusCorteTotalNoEnviado(2);   //
+
+                                        cargaCortesTotales();
 
                                         // Borrar JSON guardado
                                         SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
