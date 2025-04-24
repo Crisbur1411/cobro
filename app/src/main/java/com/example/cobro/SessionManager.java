@@ -18,7 +18,7 @@ public class SessionManager {
     private Activity activity;
     private Handler handler;
     private Runnable sessionRunnable;
-    private static final long SESSION_DURATION = 2 * 60 * 1000; // 3 minutos para pruebas
+    private static final long SESSION_DURATION = 120000; // 3 minutos para pruebas
 
     private SessionManager(Activity activity) {
         this.activity = activity;
@@ -49,11 +49,14 @@ public class SessionManager {
                                 .setMessage("¿Deseas renovar tu sesión?")
                                 .setPositiveButton("Sí", (dialog, which) -> {
                                     Toast.makeText(activity, "Sesión renovada", Toast.LENGTH_SHORT).show();
-                                    refreshSessionToken(); // 👉 Aquí agregamos el refresco
-                                    startSessionTimer(); // Reinicia temporizador
+                                    refreshSessionToken();
+                                    startSessionTimer();
                                 })
                                 .setNegativeButton("No", (dialog, which) -> {
                                     Toast.makeText(activity, "Sesión finalizada", Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(activity, MainActivity.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    activity.startActivity(intent);
                                     activity.finish();
                                 })
                                 .setCancelable(false)
@@ -62,6 +65,7 @@ public class SessionManager {
                 }
             }
         };
+
 
         handler.postDelayed(sessionRunnable, SESSION_DURATION);
     }

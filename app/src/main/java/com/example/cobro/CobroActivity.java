@@ -77,7 +77,7 @@ public class CobroActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cobro);
 
-//Navegacion de secciones
+        //Navegacion de secciones
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.nav_inicio);
 
@@ -90,7 +90,10 @@ public class CobroActivity extends AppCompatActivity {
             } else if (itemId == R.id.nav_conexion) {
                 startActivity(new Intent(this, Bluetooth.class));
                 return true;
-            }
+            }else if (itemId == R.id.nav_cerrarSesion) {
+               cerrarSesion();
+               return true;
+           }
 
             return false;
         });
@@ -200,7 +203,26 @@ public class CobroActivity extends AppCompatActivity {
 
     }
 
+    //Metodo para cerrar sesión
+    private void cerrarSesion() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Cerrar sesión")
+                .setMessage("¿Estás seguro de que deseas cerrar sesión?")
+                .setPositiveButton("Sí", (dialog, which) -> {
+                    // Limpiar datos de sesión
+                    SharedPreferences preferences = getSharedPreferences("sesion", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.clear();
+                    editor.apply();
 
+                    // Redirigir a pantalla de login
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
 
 
 

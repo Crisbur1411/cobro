@@ -1,10 +1,12 @@
 package com.example.cobro;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -57,6 +59,9 @@ public class Bluetooth extends AppCompatActivity {
             }else if (itemId == R.id.nav_cortes) {
                 startActivity(new Intent(this, CortesActivity.class));
                 return true;
+            }else if (itemId == R.id.nav_cerrarSesion) {
+                cerrarSesion();
+                return true;
             }
 
             return false;
@@ -106,6 +111,29 @@ public class Bluetooth extends AppCompatActivity {
             Toast.makeText(this, "Permisos de Bluetooth requeridos.", Toast.LENGTH_SHORT).show();
         }
     }
+
+    //Metodo para cerrar sesión
+    private void cerrarSesion() {
+        new AlertDialog.Builder(this)
+                .setTitle("Cerrar sesión")
+                .setMessage("¿Estás seguro de que deseas cerrar sesión?")
+                .setPositiveButton("Sí", (dialog, which) -> {
+                    // Limpiar datos de sesión
+                    SharedPreferences preferences = getSharedPreferences("sesion", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.clear();
+                    editor.apply();
+
+                    // Redirigir a pantalla de login
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                })
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+
 
     // Conectar al dispositivo seleccionado
     private void connectToDevice(BluetoothDevice device) {
