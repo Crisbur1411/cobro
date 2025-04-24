@@ -128,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
                     // 🔐 Guardar contraseña y token de forma permanente
                     SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("userUsuario", usuario);
                     editor.putString("passwordUsuario", password);  // Guarda la contraseña ingresada
                     editor.putString("accessToken", token);           // Guarda el token
                     editor.apply();

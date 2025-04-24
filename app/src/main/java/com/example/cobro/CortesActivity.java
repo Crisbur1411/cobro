@@ -149,7 +149,7 @@ public class CortesActivity extends AppCompatActivity {
 
             List<CorteTotal> cortes = dbHelper.getCortesParciales();
 
-            CorteAdapter adapter = new CorteAdapter(this, cortes);
+            CorteAdapter adapter = new CorteAdapter(this, cortes, true);
             listaTotales.setAdapter(adapter);
         });
 
@@ -160,7 +160,7 @@ public class CortesActivity extends AppCompatActivity {
 
             List<CorteTotal> cortes = dbHelper.getCortesTotales();
 
-            CorteAdapter adapter = new CorteAdapter(this, cortes);
+            CorteAdapter adapter = new CorteAdapter(this, cortes, true);
             listaTotales.setAdapter(adapter);
         });
 
@@ -187,7 +187,7 @@ public class CortesActivity extends AppCompatActivity {
             ventas.add(new CorteTotal("Sin ventas", "", 0));
         }
 
-        CorteAdapter adapter = new CorteAdapter(this, ventas);
+        CorteAdapter adapter = new CorteAdapter(this, ventas, false);
         listaTotales.setAdapter(adapter);
     }
 

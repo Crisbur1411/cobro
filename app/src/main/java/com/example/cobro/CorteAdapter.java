@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.media.MediaPlayer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,9 +25,11 @@ import java.util.List;
 import java.util.Locale;
 
 public class CorteAdapter extends ArrayAdapter<CorteTotal> {
+    private boolean mostrarBotonImpresion;
 
-    public CorteAdapter(Context context, List<CorteTotal> cortes) {
+    public CorteAdapter(Context context, List<CorteTotal> cortes, boolean mostrarBotonImpresion) {
         super(context, 0, cortes);
+        this.mostrarBotonImpresion = mostrarBotonImpresion;
     }
 
     @NonNull
@@ -42,7 +43,7 @@ public class CorteAdapter extends ArrayAdapter<CorteTotal> {
 
         TextView textNombre = convertView.findViewById(R.id.textNombre);
         TextView textInfo = convertView.findViewById(R.id.textInfo);
-        ImageView btnPrint = convertView.findViewById(R.id.btnPrint); // <- aquí tu ícono de impresora
+        ImageView btnPrint = convertView.findViewById(R.id.btnPrint);
 
         textNombre.setText(corte.nombre);
         textInfo.setText(corte.info);
@@ -52,10 +53,15 @@ public class CorteAdapter extends ArrayAdapter<CorteTotal> {
             textNombre.setTextColor(Color.GRAY);
             textNombre.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             textInfo.setVisibility(View.GONE);
-            btnPrint.setVisibility(View.GONE); // ocultamos el ícono si no aplica
+            btnPrint.setVisibility(View.GONE);
         } else {
             textInfo.setVisibility(View.VISIBLE);
-            btnPrint.setVisibility(View.VISIBLE); // por si antes quedó oculto
+
+            if (mostrarBotonImpresion) {
+                btnPrint.setVisibility(View.VISIBLE);
+            } else {
+                btnPrint.setVisibility(View.GONE);
+            }
 
             // Color del nombre según status
             if (corte.status == 1) {
@@ -70,6 +76,7 @@ public class CorteAdapter extends ArrayAdapter<CorteTotal> {
 
             textNombre.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
         }
+
 
         // Acción de imprimir
         btnPrint.setOnClickListener(v -> {
