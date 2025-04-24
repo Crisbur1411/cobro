@@ -230,6 +230,7 @@ public class CobroActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         actualizarEstadoConexion(); // Actualizar conexión al volver a la pantalla
+        SessionManager.getInstance(this);
     }
 
 

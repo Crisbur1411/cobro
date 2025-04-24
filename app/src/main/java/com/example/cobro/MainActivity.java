@@ -134,7 +134,11 @@ public class MainActivity extends AppCompatActivity {
                     editor.apply();
                     Log.d("TOKEN_DEBUG", "Token guardado: " + token);
 
+                    // Aquí inicia el temporizador de sesión ✅
+                    SessionManager.getInstance(MainActivity.this).startSessionTimer();
+
                     Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
+
 
                     // Ir a la siguiente pantalla y enviar el token
                     Intent intent = new Intent(MainActivity.this, CobroActivity.class);

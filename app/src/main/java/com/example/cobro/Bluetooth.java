@@ -87,6 +87,8 @@ public class Bluetooth extends AppCompatActivity {
         if (bluetoothAdapter != null && bluetoothAdapter.isEnabled()) {
             showPairedDevices();
         }
+        SessionManager.getInstance(this);
+
     }
 
     // Mostrar dispositivos emparejados

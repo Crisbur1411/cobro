@@ -1,5 +1,6 @@
 package com.example.cobro;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -299,8 +300,8 @@ public class CortesActivity extends AppCompatActivity {
                 userPhone,
                 ventas
         );
-
-        String token = prefs.getString("accessToken", null);
+        //Obtener token mas reciente
+        String token = TokenManager.getToken(this);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String jsonCorte = gson.toJson(corteRequest);
@@ -437,9 +438,8 @@ public class CortesActivity extends AppCompatActivity {
                     MediaType.parse("application/json; charset=utf-8"),
                     partialReportJson.toString()
             );
-
-            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-            String token = prefs.getString("accessToken", null);
+            //Obtener token mas reciente
+            String token = TokenManager.getToken(this);
 
             if (token != null) {
                 ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
@@ -479,7 +479,7 @@ public class CortesActivity extends AppCompatActivity {
         // Verificar si existen cortes parciales pendientes (status = 3)
         if (dbHelper.existenCortesPendientes()) {
             Toast.makeText(this, "❗ Primero sincroniza los cortes parciales pendientes.", Toast.LENGTH_LONG).show();
-            return; // Detiene la ejecución del método
+            return; // Detiene la ejecución del metodo
         }
 
 
@@ -562,9 +562,8 @@ public class CortesActivity extends AppCompatActivity {
                         MediaType.parse("application/json; charset=utf-8"),
                         finalReportJson.toString()
                 );
-                //Se declara prefs para obtener el token
-                SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-                String token = prefs.getString("accessToken", null); // 👈 Asegúrate de haberlo guardado antes
+                //Se obtiene el token mas reciente
+                String token = TokenManager.getToken(this);
 
 
                 // Enviar al backend si hay token
@@ -638,8 +637,8 @@ public class CortesActivity extends AppCompatActivity {
                                 MediaType.parse("application/json; charset=utf-8"),
                                 json.toString()
                         );
-
-                        String token = getSharedPreferences("AppPrefs", MODE_PRIVATE).getString("accessToken", null);
+                        //
+                        String token = TokenManager.getToken(this);
 
                         if (token != null) {
                             ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
@@ -680,6 +679,12 @@ public class CortesActivity extends AppCompatActivity {
     }
 
 
+    public static class TokenManager {
+        public static String getToken(Context context) {
+            SharedPreferences prefs = context.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
+            return prefs.getString("accessToken", null);
+        }
+    }
 
 
     /**
@@ -744,6 +749,8 @@ public class CortesActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         actualizarEstadoConexion(); // Actualizar conexión al volver a la pantalla
+        SessionManager.getInstance(this);
+
     }
 
     /**
