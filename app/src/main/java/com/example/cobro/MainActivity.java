@@ -128,12 +128,17 @@ public class MainActivity extends AppCompatActivity {
                     // 🔐 Guardar contraseña y token de forma permanente
                     SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("userUsuario", usuario);
                     editor.putString("passwordUsuario", password);  // Guarda la contraseña ingresada
                     editor.putString("accessToken", token);           // Guarda el token
                     editor.apply();
                     Log.d("TOKEN_DEBUG", "Token guardado: " + token);
 
+                    // Aquí inicia el temporizador de sesión ✅
+                    SessionManager.getInstance(MainActivity.this).startSessionTimer();
+
                     Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
+
 
                     // Ir a la siguiente pantalla y enviar el token
                     Intent intent = new Intent(MainActivity.this, CobroActivity.class);

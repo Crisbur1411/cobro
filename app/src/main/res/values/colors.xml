@@ -3,14 +3,15 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="colorPrimary">#298089</color>
+    <color name="colorPrimary">#328E6E</color>
     <color name="colorPrimaryDark">#1A5276</color>
 
 
     <color name="greenButton">#4CAF50</color> <!-- Verde accesible -->
 
 
-
+    <color name="teal_700">#2DA765</color>
+    <color name="gray">#888888</color>
 
     <color name="colorNormal">#3F51B5</color>       <!-- Azul -->
     <color name="colorEstudiante">#4CAF50</color>    <!-- Verde -->
@@ -18,5 +19,7 @@
     <color name="colorPlusMinus">#9C27B0</color>     <!-- Púrpura -->
     <color name="purple_500">#6200EE</color> <!-- Color normal del botón -->
     <color name="purple_700">#3700B3</color> <!-- Color al presionar -->
+    <color name="fondo_cajon">#fcfff2</color> <!-- Color para fondos de datos -->
+
 
 </resources>

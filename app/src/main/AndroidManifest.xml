@@ -38,8 +38,12 @@
             android:name=".Bluetooth"
             android:exported="false" />
         <activity
+            android:name=".CortesActivity"
+            android:exported="false" />
+        <activity
             android:name=".PrecargaActivity"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
