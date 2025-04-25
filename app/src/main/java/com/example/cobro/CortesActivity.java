@@ -304,7 +304,7 @@ public class CortesActivity extends AppCompatActivity {
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        String userPhone = prefs.getString("telefonoUsuario", "1234567890");
+        String userPhone = prefs.getString("userPhone", null);
 
         PartialCutRequest corteRequest = new PartialCutRequest(
                 "MAC00001",
@@ -443,7 +443,7 @@ public class CortesActivity extends AppCompatActivity {
 
         // Obtenemos sharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
+        String telefonoUsuario = sharedPreferences.getString("userPhone", null);
         String timestampPartial = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
         // Obtener los cortes parciales no enviados
@@ -574,7 +574,7 @@ public class CortesActivity extends AppCompatActivity {
 
 
             //Inicio de envio de JSON corte total
-            String telefonoUsuario = sharedPreferences.getString("telefonoUsuario", "1234567890");
+            String telefonoUsuario = sharedPreferences.getString("userPhone", null);
             String timestampFinal = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
             JSONObject finalReportJson = new JSONObject();
