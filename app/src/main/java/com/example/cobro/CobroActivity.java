@@ -424,9 +424,14 @@ public class CobroActivity extends AppCompatActivity {
         }
     }
 
+
+    /*
+    Metodo no utilizado
+
+
     /**
      * Solicita la contraseña antes de realizar acciones críticas (Corte Parcial, Corte Total, Bluetooth).
-     */
+
     private void solicitarPassword(String accion, Runnable accionARealizar) {
         // Crear un cuadro de diálogo para ingresar la contraseña
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -458,7 +463,7 @@ public class CobroActivity extends AppCompatActivity {
         // Mostrar el cuadro de diálogo
         builder.show();
     }
-
+ */
 
 
 }
