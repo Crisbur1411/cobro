@@ -12,6 +12,8 @@ import android.media.MediaPlayer;
 
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -80,10 +82,36 @@ public class crearActivity extends AppCompatActivity {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     String userFromApi = response.body().getData().getUser().getEmail();
+                    String userPhone = response.body().getData().getUser().getPhone();
+                    List<LoginResponse.Cash_Point> cashPoints = response.body().getData().getCashPoints();
+
+                    String identificadorIngresado = identificadorInput.getText().toString().trim();
+
+                    boolean encontrado = false;
+                    boolean activo = false;
+
+                    for (LoginResponse.Cash_Point cp : cashPoints) {
+                        if (cp.getDeviceIdentifier().equalsIgnoreCase(identificadorIngresado)) {
+                            encontrado = true;
+                            if (cp.getStatus().equalsIgnoreCase("active")) {
+                                activo = true;
+                            }
+                            break;
+                        }
+                    }
+
+                    if (!encontrado) {
+                        Toast.makeText(crearActivity.this, "Identificador no valido", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (!activo) {
+                        Toast.makeText(crearActivity.this, "Error al registrar, Dispositivo bloqueado", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
                     if (userFromApi.equals(usuario)) {
-                        // Coincide, se permite insertar localmente
-                        boolean insertado = dbHelper.insertarUsuario(usuario, contraseña, identificador);
+                        boolean insertado = dbHelper.insertarUsuario(usuario, contraseña, identificadorIngresado, userPhone);
                         if (insertado) {
                             Toast.makeText(crearActivity.this, "Usuario registrado con éxito", Toast.LENGTH_SHORT).show();
                             usuarioInput.setText("");
@@ -103,6 +131,8 @@ public class crearActivity extends AppCompatActivity {
                     Toast.makeText(crearActivity.this, "Usuario o contraseña inválidos en servidor", Toast.LENGTH_SHORT).show();
                 }
             }
+
+
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {

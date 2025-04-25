@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "usuarios.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -21,12 +21,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "usuarios TEXT UNIQUE, " +
                 "contraseña TEXT, " +
-                "identificador TEXT)";
+                "identificador TEXT, " +
+                "phone)";
 
         db.execSQL(CREATE_TABLE_USUARIOS);
 
-        // Insertar usuario por defecto (acepta símbolos y números)
-        insertarUsuario(db, "admin", "Admin123$");
     }
 
     @Override
@@ -36,12 +35,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Método para insertar usuarios
-    public boolean insertarUsuario(String usuario, String contraseña, String identificador) {
+    public boolean insertarUsuario(String usuario, String contraseña, String identificador, String userPhone) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues valores = new ContentValues();
         valores.put("usuarios", usuario);
         valores.put("contraseña", contraseña);
         valores.put("identificador", identificador);
+        valores.put("phone", userPhone);
 
         long resultado = db.insert("usuarios", null, valores);
         db.close();

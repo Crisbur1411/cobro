@@ -1,5 +1,8 @@
 package com.example.cobro;
 
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
+
 public class LoginResponse {
     private boolean status;
     private Data data;
@@ -13,26 +16,39 @@ public class LoginResponse {
     }
 
     public static class Data {
-        private String access_token;
-        private String token_type;
-        private int expires_in;
+        @SerializedName("access_token")
+        private String accessToken;
+
+        @SerializedName("token_type")
+        private String tokenType;
+
+        @SerializedName("expires_in")
+        private int expiresIn;
+
         private User user;
         private String role;
 
+        @SerializedName("cash_points")
+        private List<Cash_Point> cashPoints;
+
         public String getAccessToken() {
-            return access_token;
+            return accessToken;
         }
 
         public String getTokenType() {
-            return token_type;
+            return tokenType;
         }
 
         public int getExpiresIn() {
-            return expires_in;
+            return expiresIn;
         }
 
         public User getUser() {
             return user;
+        }
+
+        public List<Cash_Point> getCashPoints() {
+            return cashPoints;
         }
 
         public String getRole() {
@@ -54,7 +70,6 @@ public class LoginResponse {
         private String phone;
         private String deleted_at;
 
-        // Getters para cada uno de estos campos si se necesitan
         public String getName() {
             return name;
         }
@@ -62,11 +77,31 @@ public class LoginResponse {
         public String getEmail() {
             return email;
         }
+
         public String getPhone() {
             return phone;
         }
+    }
 
+    public static class Cash_Point {
+        @SerializedName("device_uuid")
+        private String deviceUuid;
 
-        // etc.
+        @SerializedName("device_identifier")
+        private String deviceIdentifier;
+
+        private String status;
+
+        public String getDeviceUuid() {
+            return deviceUuid;
+        }
+
+        public String getDeviceIdentifier() {
+            return deviceIdentifier;
+        }
+
+        public String getStatus() {
+            return status;
+        }
     }
 }
