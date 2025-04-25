@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -62,6 +63,8 @@ public class CortesActivity extends AppCompatActivity {
     private ListView listaTotales;
     private TextView btnParciales, btnTotales ,btnVentas;
 
+    private String userPhone, identificador;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,6 +115,39 @@ public class CortesActivity extends AppCompatActivity {
 
             return false;
         });
+
+
+
+        //Obtener identificador de dispoistivo y telefono desde la base de datos local
+        int userIdLocal = sharedPreferences.getInt("userIdLocal", -1);  // Valor por defecto en caso de error
+
+        if (userIdLocal != -1) {
+            DatabaseHelper dbHelper = new DatabaseHelper(this);
+            Cursor cursor = dbHelper.obtenerUsuarioPorId(userIdLocal);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                int identificadorIndex = cursor.getColumnIndexOrThrow("identificador");
+                int phoneIndex = cursor.getColumnIndexOrThrow("phone");
+
+                identificador = cursor.getString(identificadorIndex);
+                userPhone = cursor.getString(phoneIndex);
+
+                Log.d("DatosUsuario", "Identificador: " + identificador + ", Teléfono: " + userPhone);
+                // Aquí puedes usar las variables 'identificador' y 'phone' para mostrar en la UI, etc.
+
+            } else {
+                Log.d("DatosUsuario", "No se encontró usuario con ID: " + userIdLocal);
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+        } else {
+            Log.d("DatosUsuario", "No se encontró el ID de usuario en SharedPreferences");
+        }
+        Toast.makeText(this, "telefono " + userPhone +" y mac " + identificador, Toast.LENGTH_SHORT).show();
+
+
 
         //Acción para Enviar cortes totales no enviados
         Sincro_Totales = findViewById(R.id.Sincro_Totales);
@@ -303,11 +339,9 @@ public class CortesActivity extends AppCompatActivity {
 
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
-        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        String userPhone = prefs.getString("userPhone", null);
 
         PartialCutRequest corteRequest = new PartialCutRequest(
-                "MAC00001",
+                identificador,
                 timestamp,
                 "partial",
                 userPhone,
@@ -442,8 +476,6 @@ public class CortesActivity extends AppCompatActivity {
         reproducirSonidoClick(); // Opcional
 
         // Obtenemos sharedPreferences
-        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-        String telefonoUsuario = sharedPreferences.getString("userPhone", null);
         String timestampPartial = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
         // Obtener los cortes parciales no enviados
@@ -457,10 +489,10 @@ public class CortesActivity extends AppCompatActivity {
 
         JSONObject partialReportJson = new JSONObject();
         try {
-            partialReportJson.put("device_identifier", "MAC00001");
+            partialReportJson.put("device_identifier", identificador);
             partialReportJson.put("timestamp", timestampPartial);
             partialReportJson.put("type", "partial");
-            partialReportJson.put("user", telefonoUsuario);
+            partialReportJson.put("user", userPhone);
 
             JSONArray cortesNoEnviadosArray = new JSONArray(cortesParcialesNoEnv);
             partialReportJson.put("reports", cortesNoEnviadosArray);
@@ -574,15 +606,14 @@ public class CortesActivity extends AppCompatActivity {
 
 
             //Inicio de envio de JSON corte total
-            String telefonoUsuario = sharedPreferences.getString("userPhone", null);
             String timestampFinal = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
 
             JSONObject finalReportJson = new JSONObject();
             try {
-                finalReportJson.put("device_identifier", "MAC00001");
+                finalReportJson.put("device_identifier", identificador);
                 finalReportJson.put("timestamp", timestampFinal);
                 finalReportJson.put("type", "final");
-                finalReportJson.put("user", telefonoUsuario);
+                finalReportJson.put("user", userPhone);
 
                 // Convertimos la lista de JSONObject en un JSONArray
                 List<JSONObject> cortesParciales = dbHelper.obtenerTodosLosCortesParcialesEstructurado();

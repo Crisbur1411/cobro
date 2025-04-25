@@ -129,6 +129,11 @@ public class MainActivity extends AppCompatActivity {
                     if (response.isSuccessful() && response.body() != null) {
                         String token = response.body().getData().getAccessToken();
                         String phone = response.body().getData().getUser().getPhone();
+                        String usuarioApi = usuario; // o response.body().getData().getUser().getEmail();
+
+                        // Obtener id local
+                        DatabaseHelper dbHelper = new DatabaseHelper(MainActivity.this);
+                        int userIdLocal = dbHelper.obtenerIdUsuarioPorEmail(usuarioApi);
 
                         // Guardar en SharedPreferences
                         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
@@ -137,16 +142,18 @@ public class MainActivity extends AppCompatActivity {
                         editor.putString("passwordUsuario", password);
                         editor.putString("accessToken", token);
                         editor.putString("userPhone", phone);
+                        editor.putInt("userIdLocal", userIdLocal);
                         editor.apply();
 
                         SessionManager.getInstance(MainActivity.this).startSessionTimer();
 
                         Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "id " + userIdLocal, Toast.LENGTH_SHORT).show();
 
                         Intent intent = new Intent(MainActivity.this, CobroActivity.class);
-                        intent.putExtra("token", token);
                         startActivity(intent);
-                    } else {
+                    }
+                    else {
                         Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -164,13 +171,18 @@ public class MainActivity extends AppCompatActivity {
             boolean usuarioValido = dbHelper.verificarUsuario(usuario, password);
 
             if (usuarioValido) {
+                int userIdLocal = dbHelper.obtenerIdUsuarioPorEmail(usuario);
+
                 Toast.makeText(MainActivity.this, "Inicio de sesión local exitoso", Toast.LENGTH_SHORT).show();
+
+                Toast.makeText(MainActivity.this, "id " + userIdLocal, Toast.LENGTH_SHORT).show();
 
                 // Guardar usuario y contraseña localmente
                 SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("userUsuario", usuario);
                 editor.putString("passwordUsuario", password);
+                editor.putInt("userIdLocal", userIdLocal);
                 editor.apply();
 
                 SessionManager.getInstance(MainActivity.this).startSessionTimer();

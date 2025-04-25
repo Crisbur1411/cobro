@@ -21,7 +21,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 13;
+    private static final int DATABASE_VERSION = 14;
 
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
@@ -195,12 +195,25 @@ public class control_cortes extends SQLiteOpenHelper {
 
     /**
      * Borra todos los registros de la tabla 'cortes'.
-     */
+
     public void borrarCortes() {
         SQLiteDatabase db = this.getWritableDatabase();
         db.execSQL("DELETE FROM cortes");
         db.close();
     }
+
+
+    // Metodo para borrar los detalles de cortes
+    public void borrarDetallesCortes() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM DetalleCorteParcial");
+        db.close();
+    }
+     */
+
+
+
+
     //Guardar detalles del corte parcial
     public long guardarDetalleCorte(String user, String timestamp, int routeFareId, int quantity, double price, int status) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -432,15 +445,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
 
 
-    /*
-    // Metodo para borrar los detalles de cortes
-    public void borrarDetallesCortes() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("DELETE FROM DetalleCorteParcial");
-        db.close();
-    }
 
-     */
 
 
     public List<CorteTotal> getCortesTotales() {
