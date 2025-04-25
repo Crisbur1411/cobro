@@ -67,6 +67,10 @@ public class LoginResponse {
         }
 
 
+        public String getPhone(){
+            return phone;
+        }
+
         // etc.
     }
 }

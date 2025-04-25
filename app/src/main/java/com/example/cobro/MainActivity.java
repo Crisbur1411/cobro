@@ -124,8 +124,6 @@ public class MainActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null) {
                     String token = response.body().getData().getAccessToken(); // ✅ Correcto ahora
-                    String phone = response.body().getData().getUser().getPhone(); // Se guarda el telefono
-
 
                     // 🔐 Guardar contraseña y token de forma permanente
                     SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
@@ -133,12 +131,8 @@ public class MainActivity extends AppCompatActivity {
                     editor.putString("userUsuario", usuario);
                     editor.putString("passwordUsuario", password);  // Guarda la contraseña ingresada
                     editor.putString("accessToken", token);           // Guarda el token
-                    editor.putString("userPhone", phone);
                     editor.apply();
                     Log.d("TOKEN_DEBUG", "Token guardado: " + token);
-                    Log.d("PHONE_DEBUG", "Phone guardado: " + phone);
-
-                    Toast.makeText(MainActivity.this, "Teléfono almacenado: " + phone, Toast.LENGTH_SHORT).show();
 
                     // Aquí inicia el temporizador de sesión ✅
                     SessionManager.getInstance(MainActivity.this).startSessionTimer();
