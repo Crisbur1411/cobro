@@ -63,4 +63,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         valores.put("contraseña", contraseña);
         db.insert("usuarios", null, valores);
     }
+
+    // Metodo para borrar los detalles de cortes
+    public void borrarUsuarios() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM usuarios");
+        db.close();
+    }
+
 }
