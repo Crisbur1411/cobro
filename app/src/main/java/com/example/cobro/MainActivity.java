@@ -1,9 +1,12 @@
 package com.example.cobro;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -106,56 +109,87 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Mostrar diálogo de carga
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Cargando...")
-                .setMessage("Verificando credenciales")
-                .setCancelable(false);
+        if (hayConexionInternet()) {
+            // Mostrar diálogo de carga
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Cargando...")
+                    .setMessage("Verificando credenciales")
+                    .setCancelable(false);
 
-        AlertDialog progressDialog = builder.create();
-        progressDialog.show();
+            AlertDialog progressDialog = builder.create();
+            progressDialog.show();
 
-        // Enviar petición al API
-        LoginRequest request = new LoginRequest(usuario, password);
-        ApiClient.getApiService().login(request).enqueue(new retrofit2.Callback<LoginResponse>() {
-            @Override
-            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                progressDialog.dismiss();
+            // Enviar petición al API
+            LoginRequest request = new LoginRequest(usuario, password);
+            ApiClient.getApiService().login(request).enqueue(new retrofit2.Callback<LoginResponse>() {
+                @Override
+                public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                    progressDialog.dismiss();
 
-                if (response.isSuccessful() && response.body() != null) {
-                    String token = response.body().getData().getAccessToken(); // ✅ Correcto ahora
+                    if (response.isSuccessful() && response.body() != null) {
+                        String token = response.body().getData().getAccessToken();
+                        String phone = response.body().getData().getUser().getPhone();
 
-                    // 🔐 Guardar contraseña y token de forma permanente
-                    SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putString("userUsuario", usuario);
-                    editor.putString("passwordUsuario", password);  // Guarda la contraseña ingresada
-                    editor.putString("accessToken", token);           // Guarda el token
-                    editor.apply();
-                    Log.d("TOKEN_DEBUG", "Token guardado: " + token);
+                        // Guardar en SharedPreferences
+                        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("userUsuario", usuario);
+                        editor.putString("passwordUsuario", password);
+                        editor.putString("accessToken", token);
+                        editor.putString("userPhone", phone);
+                        editor.apply();
 
-                    // Aquí inicia el temporizador de sesión ✅
-                    SessionManager.getInstance(MainActivity.this).startSessionTimer();
+                        SessionManager.getInstance(MainActivity.this).startSessionTimer();
 
-                    Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
 
-
-                    // Ir a la siguiente pantalla y enviar el token
-                    Intent intent = new Intent(MainActivity.this, CobroActivity.class);
-                    intent.putExtra("token", token);
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(MainActivity.this, CobroActivity.class);
+                        intent.putExtra("token", token);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
+                    }
                 }
-            }
 
-            @Override
-            public void onFailure(Call<LoginResponse> call, Throwable t) {
-                progressDialog.dismiss();
-                Toast.makeText(MainActivity.this, "Error de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                @Override
+                public void onFailure(Call<LoginResponse> call, Throwable t) {
+                    progressDialog.dismiss();
+                    Toast.makeText(MainActivity.this, "Error de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
+
+        } else {
+            // Sin internet: verificar contra SQLite local
+            DatabaseHelper dbHelper = new DatabaseHelper(MainActivity.this);
+            boolean usuarioValido = dbHelper.verificarUsuario(usuario, password);
+
+            if (usuarioValido) {
+                Toast.makeText(MainActivity.this, "Inicio de sesión local exitoso", Toast.LENGTH_SHORT).show();
+
+                // Guardar usuario y contraseña localmente
+                SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("userUsuario", usuario);
+                editor.putString("passwordUsuario", password);
+                editor.apply();
+
+                SessionManager.getInstance(MainActivity.this).startSessionTimer();
+
+                Intent intent = new Intent(MainActivity.this, CobroActivity.class);
+                startActivity(intent);
+            } else {
+                Toast.makeText(MainActivity.this, "Credenciales incorrectas (sin conexión)", Toast.LENGTH_SHORT).show();
             }
-        });
+        }
     }
+
+    // Método para verificar conexión a internet
+    private boolean hayConexionInternet() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnected();
+    }
+
 
     private void reproducirSonidoClick() {
         if (sonidoClick != null) {
