@@ -145,7 +145,8 @@ public class MainActivity extends AppCompatActivity {
                         editor.putInt("userIdLocal", userIdLocal);
                         editor.apply();
 
-                        SessionManager.getInstance(MainActivity.this).startSessionTimer();
+                        //Se comenta el sesion manager ya que es el que iniciaba el temporizador
+                        //SessionManager.getInstance(MainActivity.this).startSessionTimer();
 
                         Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
                         Toast.makeText(MainActivity.this, "id " + userIdLocal, Toast.LENGTH_SHORT).show();
@@ -185,7 +186,8 @@ public class MainActivity extends AppCompatActivity {
                 editor.putInt("userIdLocal", userIdLocal);
                 editor.apply();
 
-                SessionManager.getInstance(MainActivity.this).startSessionTimer();
+                //Se comenta el sesion manager ya que es el que iniciaba el temporizador
+                //SessionManager.getInstance(MainActivity.this).startSessionTimer();
 
                 Intent intent = new Intent(MainActivity.this, CobroActivity.class);
                 startActivity(intent);

@@ -359,7 +359,6 @@ public class CortesActivity extends AppCompatActivity {
                 .setPositiveButton("OK", null)
                 .show();
 
-        cargaCortesParciales();
 
 
         if (token != null) {
@@ -368,9 +367,8 @@ public class CortesActivity extends AppCompatActivity {
                 public void onResponse(Call<Void> call, Response<Void> response) {
                     if (response.isSuccessful()) {
                         Toast.makeText(CortesActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
-                        dbHelper.actualizarEstatusBoletos(1);   // Actualiza el estatus de los boletos a uno para ya no ser mostrados ni enviados al corte parcial
-                        dbHelper.actualizarEstatusCortesParcialesParaCorteTotal(1); //Actualiza el estatus de los cortes parciales a 1 para ser tomados por el corte total
-
+                        dbHelper.actualizarEstatusBoletos(1);
+                        dbHelper.actualizarEstatusCortesParcialesParaCorteTotal(1);
 
                         int status = 1;
                         StringBuilder resumenGuardado = new StringBuilder();
@@ -391,11 +389,24 @@ public class CortesActivity extends AppCompatActivity {
                                 .setPositiveButton("OK", null)
                                 .show();
 
+                        cargaCortesParciales();
+
+                    } else if (response.code() == 500) {
+                        Toast.makeText(CortesActivity.this, "El token ha expirado.", Toast.LENGTH_LONG).show();
+                        guardarCorteConError(userPhone, timestamp, ventas, 3);
+                        dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
+                        dbHelper.actualizarEstatusBoletos(1);
+
+                        SessionManager.getInstance(CortesActivity.this).showSessionExpiredDialog();
+
+                        cargaCortesParciales();
+
                     } else {
                         Toast.makeText(CortesActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
                         guardarCorteConError(userPhone, timestamp, ventas, 3);
                         dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
-                        dbHelper.actualizarEstatusBoletos(1);   //
+                        dbHelper.actualizarEstatusBoletos(1);
+                        cargaCortesParciales();
 
                     }
                 }
@@ -405,7 +416,8 @@ public class CortesActivity extends AppCompatActivity {
                     Toast.makeText(CortesActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
                     guardarCorteConError(userPhone, timestamp, ventas, 3);
                     dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
-                    dbHelper.actualizarEstatusBoletos(1);   //
+                    dbHelper.actualizarEstatusBoletos(1);
+                    cargaCortesParciales();
 
                 }
             });
@@ -521,6 +533,8 @@ public class CortesActivity extends AppCompatActivity {
                             Toast.makeText(CortesActivity.this, "Cortes Parciales enviados", Toast.LENGTH_SHORT).show();
                             dbHelper.actualizarEstatusCortesNoEnviados(1);
                             dbHelper.actualizarEstatusCortesParcialesASincronizado(1);
+                            cargaCortesParciales();
+
                         } else {
                             Toast.makeText(CortesActivity.this, "Error al enviar cortes parciales: " + response.code(), Toast.LENGTH_SHORT).show();
                         }
@@ -529,6 +543,8 @@ public class CortesActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(Call<Void> call, Throwable t) {
                         Toast.makeText(CortesActivity.this, "Fallo de red. Intenta más tarde", Toast.LENGTH_SHORT).show();
+                        cargaCortesParciales();
+
                     }
                 });
             } else {
@@ -636,7 +652,6 @@ public class CortesActivity extends AppCompatActivity {
                 //Se obtiene el token mas reciente
                 String token = TokenManager.getToken(this);
 
-                cargaCortesTotales();
 
                 // Enviar al backend si hay token
                 if (token != null) {
@@ -649,6 +664,8 @@ public class CortesActivity extends AppCompatActivity {
                                 dbHelper.actualizarEstatusDetalleCorte(2);
                                 dbHelper.actualizarEstatusCorteTotal(2);   //
                                 dbHelper.actualizarEstatusCortesParcialesAEnviados(2);
+                                cargaCortesTotales();
+
 
                             } else {
                                 Toast.makeText(CortesActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
@@ -668,6 +685,8 @@ public class CortesActivity extends AppCompatActivity {
                             SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
                             editor.putString("jsonPendiente", finalReportJson.toString());
                             editor.apply();
+                            cargaCortesTotales();
+
                         }
                     });
                 } else {
@@ -736,6 +755,8 @@ public class CortesActivity extends AppCompatActivity {
                                 @Override
                                 public void onFailure(Call<Void> call, Throwable t) {
                                     Toast.makeText(CortesActivity.this, "Fallo de red en reintento", Toast.LENGTH_SHORT).show();
+                                    cargaCortesTotales();
+
                                 }
                             });
                         } else {
