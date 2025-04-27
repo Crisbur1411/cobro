@@ -51,7 +51,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 
-public class CobroActivity extends AppCompatActivity {
+public class CobroActivity extends BaseStatusBluetooth {
+
 
     private TextView tvNumero;
     private int contador = 1; // Cantidad de boletos en venta individual
@@ -67,7 +68,6 @@ public class CobroActivity extends AppCompatActivity {
     private control_cortes dbHelper;
 
     private TextView tvUltimaTransaccion; // Mostrar última transacción
-    private TextView tvEstadoConexion;
     private String passwordUsuario; // Variable para almacenar la contraseña
     private MediaPlayer sonidoClick;
 
@@ -402,75 +402,6 @@ public class CobroActivity extends AppCompatActivity {
                 .show();
     }
 
-    /**
-     * Verifica si la impresora Bluetooth está conectada
-     */
-    private boolean isBluetoothConnected() {
-        if (Bluetooth.bluetoothSocket != null) {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-                        ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
-
-                if (!Bluetooth.bluetoothSocket.isConnected()) {
-                    return false;
-                }
-
-                // Probar escritura vacía para validar estado real
-                Bluetooth.bluetoothSocket.getOutputStream().write(0);
-                Bluetooth.bluetoothSocket.getOutputStream().flush();
-
-                return true;
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
-        }
-        return false;
-    }
-
-    //Metodo para validar conexion cada cierto tiempo
-    private Runnable checkConnectionRunnable = new Runnable() {
-        @Override
-        public void run() {
-            actualizarEstadoConexion(); // Aquí llamas a tu método que actualiza el TextView
-            handler.postDelayed(this, 1000); // cada 1 segundos
-        }
-    };
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        actualizarEstadoConexion();
-        handler.post(checkConnectionRunnable);
-        SessionManager.getInstance(this);
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        handler.removeCallbacks(checkConnectionRunnable);
-    }
-
-    /**
-     * Actualiza el estado de la conexión Bluetooth en pantalla
-     */
-    private void actualizarEstadoConexion() {
-        if (isBluetoothConnected()) {
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-
-                return;
-            }
-            tvEstadoConexion.setText("✅ Conectado");
-            tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-        } else {
-            tvEstadoConexion.setText("⚠️ Desconectado");
-            tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-        }
-    }
 
 
     /*
