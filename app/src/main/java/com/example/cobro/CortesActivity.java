@@ -1,5 +1,6 @@
 package com.example.cobro;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -7,7 +8,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.View;
@@ -64,6 +67,7 @@ public class CortesActivity extends AppCompatActivity {
     private TextView btnParciales, btnTotales ,btnVentas;
 
     private String userPhone, identificador;
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -838,15 +842,57 @@ public class CortesActivity extends AppCompatActivity {
      * Verifica si la impresora Bluetooth está conectada
      */
     private boolean isBluetoothConnected() {
-        return Bluetooth.bluetoothSocket != null && Bluetooth.bluetoothSocket.isConnected();
+        if (Bluetooth.bluetoothSocket != null) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                        ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+
+                if (!Bluetooth.bluetoothSocket.isConnected()) {
+                    return false;
+                }
+
+                // Probar escritura vacía para validar estado real
+                Bluetooth.bluetoothSocket.getOutputStream().write(0);
+                Bluetooth.bluetoothSocket.getOutputStream().flush();
+
+                return true;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return false;
     }
+
+
+    //Metodo para validar conexion cada cierto tiempo
+    private Runnable checkConnectionRunnable = new Runnable() {
+        @Override
+        public void run() {
+            actualizarEstadoConexion(); // Aquí llamas a tu método que actualiza el TextView
+            handler.postDelayed(this, 1000); // cada 1 segundos
+        }
+    };
+
+
     @Override
     protected void onResume() {
         super.onResume();
-        actualizarEstadoConexion(); // Actualizar conexión al volver a la pantalla
+        actualizarEstadoConexion();
+        handler.post(checkConnectionRunnable);
         SessionManager.getInstance(this);
 
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(checkConnectionRunnable);
+    }
+
 
     /**
      * Actualiza el estado de la conexión Bluetooth en pantalla
