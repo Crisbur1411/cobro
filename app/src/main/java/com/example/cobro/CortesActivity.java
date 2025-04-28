@@ -147,7 +147,8 @@ public class CortesActivity extends BaseStatusBluetooth {
         } else {
             Log.d("DatosUsuario", "No se encontró el ID de usuario en SharedPreferences");
         }
-        Toast.makeText(this, "telefono " + userPhone +" y mac " + identificador, Toast.LENGTH_SHORT).show();
+
+        //Toast.makeText(this, "telefono " + userPhone +" y mac " + identificador, Toast.LENGTH_SHORT).show();
 
 
 
@@ -352,6 +353,7 @@ public class CortesActivity extends BaseStatusBluetooth {
         //Obtener token mas reciente
         String token = TokenManager.getToken(this);
 
+        /*
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String jsonCorte = gson.toJson(corteRequest);
 
@@ -360,7 +362,7 @@ public class CortesActivity extends BaseStatusBluetooth {
                 .setMessage(jsonCorte)
                 .setPositiveButton("OK", null)
                 .show();
-
+        */
 
 
         if (token != null) {
@@ -373,23 +375,30 @@ public class CortesActivity extends BaseStatusBluetooth {
                         dbHelper.actualizarEstatusCortesParcialesParaCorteTotal(1);
 
                         int status = 1;
-                        StringBuilder resumenGuardado = new StringBuilder();
-                        resumenGuardado.append("Datos guardados localmente:\n\n");
+
+                //        StringBuilder resumenGuardado = new StringBuilder();
+                //        resumenGuardado.append("Datos guardados localmente:\n\n");
 
                         for (SaleItem venta : ventas) {
                             dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
+                            /*
                             resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
                                     .append("Fecha: ").append(timestamp).append("\n")
                                     .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
                                     .append("Cantidad: ").append(venta.getQuantity()).append("\n")
                                     .append("Status: ").append(status).append("\n\n");
+
+                             */
                         }
 
+                        /*
                         new AlertDialog.Builder(CortesActivity.this)
                                 .setTitle("Corte Parcial Guardado")
                                 .setMessage(resumenGuardado.toString())
                                 .setPositiveButton("OK", null)
                                 .show();
+
+                         */
 
                         cargaCortesParciales();
 
@@ -444,22 +453,29 @@ public class CortesActivity extends BaseStatusBluetooth {
     }
 
     private void guardarCorteConError(String userPhone, String timestamp, List<SaleItem> ventas, int status) {
-        StringBuilder resumenGuardado = new StringBuilder();
+
+        //StringBuilder resumenGuardado = new StringBuilder();
 
         for (SaleItem venta : ventas) {
             dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
+
+            /*
             resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
                     .append("Fecha: ").append(timestamp).append("\n")
                     .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
                     .append("Cantidad: ").append(venta.getQuantity()).append("\n")
                     .append("Status: ").append(status).append("\n\n");
-        }
 
+             */
+        }
+        /*
         new AlertDialog.Builder(CortesActivity.this)
                 .setTitle("Corte NO enviado")
                 .setMessage(resumenGuardado.toString())
                 .setPositiveButton("OK", null)
                 .show();
+         */
+
     }
 
     //Metodo para cerrar sesión
@@ -511,11 +527,14 @@ public class CortesActivity extends BaseStatusBluetooth {
             JSONArray cortesNoEnviadosArray = new JSONArray(cortesParcialesNoEnv);
             partialReportJson.put("reports", cortesNoEnviadosArray);
 
+            /*
             new AlertDialog.Builder(CortesActivity.this)
                     .setTitle("JSON Cortes parciales no enviados")
                     .setMessage(partialReportJson.toString(2))
                     .setPositiveButton("OK", null)
                     .show();
+
+             */
 
             RequestBody body = RequestBody.create(
                     MediaType.parse("application/json; charset=utf-8"),
@@ -617,7 +636,7 @@ public class CortesActivity extends BaseStatusBluetooth {
             );
 
             if (resultadoInsert != -1) {
-                Toast.makeText(CortesActivity.this, "✅ Corte total guardado correctamente en la base de datos local.", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(CortesActivity.this, "✅ Corte total guardado correctamente en la base de datos local.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(CortesActivity.this, "❌ Error al guardar el corte total en la base de datos.", Toast.LENGTH_SHORT).show();
             }
@@ -639,12 +658,15 @@ public class CortesActivity extends BaseStatusBluetooth {
 
                 finalReportJson.put("reports", cortesArray);
 
+                /*
                 // Mostrar en AlertDialog por ejemplo
                 new AlertDialog.Builder(CortesActivity.this)
                         .setTitle("JSON Final")
                         .setMessage(finalReportJson.toString(2)) // Pretty print con indentación de 2 espacios
                         .setPositiveButton("OK", null)
                         .show();
+
+                 */
 
                 // Aquí convertimos el JSON a RequestBody y lo enviamos
                 RequestBody body = RequestBody.create(
@@ -676,7 +698,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
                         @Override
                         public void onFailure(Call<Void> call, Throwable t) {
-                            Toast.makeText(CortesActivity.this, "Fallo de red. Los cortes parciales se enviarán cuando la red esté disponible", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(CortesActivity.this, "Fallo de red. Sincronice el corte total cuando esté conectado a la red.", Toast.LENGTH_SHORT).show();
 
                             dbHelper.actualizarEstatusCorteTotal(3);   //
                             // Guarda el JSON para reintento
@@ -722,8 +744,8 @@ public class CortesActivity extends BaseStatusBluetooth {
 
             // 👉 Mostrar el JSON antes de enviarlo
             new AlertDialog.Builder(CortesActivity.this)
-                    .setTitle("JSON a enviar")
-                    .setMessage(json.toString(2)) // pretty print con indentación de 2 espacios
+                    .setTitle("Reenvío de corte total.")
+                    .setMessage("Reenviar el corte total") // pretty print con indentación de 2 espacios
                     .setPositiveButton("Enviar", (dialog, which) -> {
 
                         RequestBody body = RequestBody.create(

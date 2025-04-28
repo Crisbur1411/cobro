@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
                         Toast.makeText(MainActivity.this, "id " + userIdLocal, Toast.LENGTH_SHORT).show();
 
-                        Intent intent = new Intent(MainActivity.this, CobroActivity.class);
+                        Intent intent = new Intent(MainActivity.this, Bluetooth.class);
                         startActivity(intent);
                     }
                     else {
@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 //Se comenta el sesion manager ya que es el que iniciaba el temporizador
                 //SessionManager.getInstance(MainActivity.this).startSessionTimer();
 
-                Intent intent = new Intent(MainActivity.this, CobroActivity.class);
+                Intent intent = new Intent(MainActivity.this, Bluetooth.class);
                 startActivity(intent);
             } else {
                 Toast.makeText(MainActivity.this, "Credenciales incorrectas (sin conexión)", Toast.LENGTH_SHORT).show();
