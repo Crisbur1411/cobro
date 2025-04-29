@@ -70,9 +70,8 @@ public class CortesActivity extends BaseStatusBluetooth {
     private String userPhone, identificador;
     private Handler handler = new Handler();
     private ImageView calendario;
-    private String fechaSeleccionadaTotales = "";
-    private String fechaSeleccionadaParciales = "";
-    private String fechaSeleccionadaVentas = "";
+
+    private String fechaSeleccionada = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,6 +125,16 @@ public class CortesActivity extends BaseStatusBluetooth {
 
             return false;
         });
+
+        // Cargar cortes parciales, totales y ventas por fecha actual
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        fechaSeleccionada = sdf.format(new Date());
+
+        // Cargar todo con la fecha de hoy
+        cargaCortesTotales();
+        cargaCortesParciales();
+        mostrarVentas();
+
 
 
 
@@ -231,9 +240,9 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         List<CorteTotal> ventas;
 
-        // Aquí usas la nueva variable de fechaSeleccionadaVentas
-        if (!fechaSeleccionadaVentas.isEmpty()) {
-            ventas = dbHelper.getVentasPorFecha(fechaSeleccionadaVentas);
+
+        if (!fechaSeleccionada.isEmpty()) {
+            ventas = dbHelper.getVentasPorFecha(fechaSeleccionada);
         } else {
             ventas = dbHelper.getVentas();
         }
@@ -255,8 +264,8 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         List<CorteTotal> cortes;
 
-        if (!fechaSeleccionadaParciales.isEmpty()) {
-            cortes = dbHelper.getCortesParcialesPorFecha(fechaSeleccionadaParciales);
+        if (!fechaSeleccionada.isEmpty()) {
+            cortes = dbHelper.getCortesParcialesPorFecha(fechaSeleccionada);
         } else {
             cortes = dbHelper.getCortesParciales();
         }
@@ -274,8 +283,8 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         List<CorteTotal> cortes;
 
-        if (!fechaSeleccionadaTotales.isEmpty()) {
-            cortes = dbHelper.getCortesPorFecha(fechaSeleccionadaTotales);
+        if (!fechaSeleccionada.isEmpty()) {
+            cortes = dbHelper.getCortesPorFecha(fechaSeleccionada);
         } else {
             cortes = dbHelper.getCortesTotales();
         }
@@ -496,6 +505,8 @@ public class CortesActivity extends BaseStatusBluetooth {
     }
 
 
+
+
     //Metodo para mostrar el calendario
     private void showDatePickerDialog() {
         final Calendar calendar = Calendar.getInstance();
@@ -504,11 +515,9 @@ public class CortesActivity extends BaseStatusBluetooth {
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
         DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year1, month1, dayOfMonth) -> {
-            fechaSeleccionadaTotales = String.format(Locale.getDefault(), "%02d/%02d/%04d", dayOfMonth, month1 + 1, year1);
-            fechaSeleccionadaParciales = String.format(Locale.getDefault(), "%04d-%02d-%02d", year1, month1 + 1, dayOfMonth);
-            fechaSeleccionadaVentas = String.format(Locale.getDefault(), "%04d-%02d-%02d", year1, month1 + 1, dayOfMonth);
+           fechaSeleccionada = String.format(Locale.getDefault(), "%04d-%02d-%02d", year1, month1 + 1, dayOfMonth);
 
-            // Lo de cortes puedes dejarlo o controlarlo desde donde llames el DatePicker
+            //Para cargar la opcion que se coloque
             //cargaCortesParciales();
             mostrarVentas();
         }, year, month, day);
@@ -676,7 +685,7 @@ public class CortesActivity extends BaseStatusBluetooth {
             }
 
             StringBuilder contenido = new StringBuilder();
-            String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
+            String fechaHora = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
             contenido.append("Corte Total").append("\n")
                     .append("Fecha y Hora: ").append(fechaHora).append("\n\n")
                     .append("Pasaje Normal: ").append(totalPasajerosNormal).append("  |  $").append(totalNormal).append("\n")
