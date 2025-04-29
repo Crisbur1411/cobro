@@ -1,81 +1,47 @@
+//Maneja la pantalla principal del app, la cual contiene los botones de los boletos individuales
+//Ademas de manejar la impresion de tickets infividuales y la visualizacion de conexion bluetooth y ultima transaccion
 package com.example.cobro;
 
-import static com.example.cobro.Bluetooth.bluetoothSocket;
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.view.View;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.Fragment;
-
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import android.media.MediaPlayer;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import android.view.MenuItem;
-
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
 
 public class CobroActivity extends BaseStatusBluetooth {
 
 
-    private TextView tvNumero;
+    private TextView tvNumero; //Muestra el numero de seleccion de ventas
     private int contador = 1; // Cantidad de boletos en venta individual
     private LinearLayout btnPasajeNormal, btnEstudiante, btnTerceraEdad; //Botones para generar tickets
 
     // Precios fijos
-    private static final int PRECIO_NORMAL = 18;
-    private static final int PRECIO_ESTUDIANTE = 12;
-    private static final int PRECIO_TERCERA_EDAD = 5;
+    private static final int PRECIO_NORMAL = 18; //Precio fijo para pasaje normal
+    private static final int PRECIO_ESTUDIANTE = 12; //Precio fijo para pasaje de estudiante
+    private static final int PRECIO_TERCERA_EDAD = 5; //Precio fijo para pasaje de tercera edad
 
+    private control_cortes dbHelper; // Instancia de la clase que maneja la BD para cortes parciales
 
-    // Instancia de la clase que maneja la BD para cortes parciales
-    private control_cortes dbHelper;
-
-    private TextView tvUltimaTransaccion; // Mostrar última transacción
+    private TextView tvUltimaTransaccion; //TextView para Mostrar última transacción
     private String passwordUsuario; // Variable para almacenar la contraseña
-    private MediaPlayer sonidoClick;
+    private MediaPlayer sonidoClick; // Maneja los sonidos del dispositivo
 
-    private SharedPreferences prefs;     //Se declara SharedPreferences
+    private SharedPreferences prefs;     //Se declara SharedPreferences para almacenar informacion necesaria
 
-    private int numeroTransaccion;
-
-    private Handler handler = new Handler();
+    private int numeroTransaccion; //Inicializa el numero de transaccion en 1
 
 
     @SuppressLint("MissingInflatedId")
@@ -105,7 +71,7 @@ public class CobroActivity extends BaseStatusBluetooth {
             return false;
         });
 
-
+        //Muestra la ultima transaccion en pantalla
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
         // Inicializar el TextView del estado de conexión
         tvEstadoConexion = findViewById(R.id.tvEstadoConexion);
@@ -113,42 +79,25 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Inicializar sonido al cargar la actividad
         sonidoClick = MediaPlayer.create(this, R.raw.click);
 
-        // 🔥 Obtener la contraseña enviada desde MainActivity
+        //Obtener la contraseña enviada desde MainActivity
         passwordUsuario = getIntent().getStringExtra("passwordUsuario");
 
         // Verificar si la contraseña ya está almacenada
         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         passwordUsuario = sharedPreferences.getString("passwordUsuario", null);
 
-// Si no hay contraseña guardada, obtenerla desde el Intent
-        if (passwordUsuario == null) {
-            passwordUsuario = getIntent().getStringExtra("passwordUsuario");
-
-            // Si la contraseña es válida, guardarla permanentemente
-            if (passwordUsuario != null && !passwordUsuario.isEmpty()) {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("passwordUsuario", passwordUsuario);
-                editor.apply();
-                Toast.makeText(this, "Contraseña guardada correctamente.", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "⚠️ No se recibió contraseña.", Toast.LENGTH_SHORT).show();
-            }
-        }
-
 
         //Se inicializa el número de transacción
         prefs = getSharedPreferences("MisPreferencias", MODE_PRIVATE);
         numeroTransaccion = prefs.getInt("numeroTransaccion", 1);  // valor 1
 
-
-
-        // Actualizar el estado al iniciar
+        // Actualizar el estado de conexion al iniciar
         actualizarEstadoConexion();
 
         // Inicializar la base de datos
         dbHelper = new control_cortes(this);
 
-        // Referencias a la interfaz
+        // Referencias a la interfaz para botones y numero de transaccion
         Button btnMas = findViewById(R.id.btnMas);
         Button btnMenos = findViewById(R.id.btnMenos);
         btnTerceraEdad = findViewById(R.id.btnTerceraEdad);
@@ -158,29 +107,23 @@ public class CobroActivity extends BaseStatusBluetooth {
 
         tvNumero.setText(String.valueOf(contador));
 
-
-
-
-
-
-        // Botones para incrementar y decrementar el contador
+        // Botones para incrementar el contador
         btnMas.setOnClickListener(v -> {
             contador++;
             tvNumero.setText(String.valueOf(contador));
-            // Llamamos al metodo para reproducir Sonido
             reproducirSonidoClick();
         });
 
+        // Boton para decrementar el contador
         btnMenos.setOnClickListener(v -> {
             if (contador > 1) {
                 contador--;
                 tvNumero.setText(String.valueOf(contador));
             }
-            // Llamamos al metodo para reproducir Sonido
             reproducirSonidoClick();
         });
 
-        // Venta individual: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
+        // Venta tercera edad: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
         btnTerceraEdad.setOnClickListener(v -> {
             generateSingleTicketText("Tercera Edad", contador);
             acumularVenta("Tercera Edad", PRECIO_TERCERA_EDAD);
@@ -189,6 +132,7 @@ public class CobroActivity extends BaseStatusBluetooth {
             reproducirSonidoClick();
         });
 
+        // Venta Normal: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
         btnPasajeNormal.setOnClickListener(v -> {
             generateSingleTicketText("Pasaje Normal", contador);
             acumularVenta("Pasaje Normal", PRECIO_NORMAL);
@@ -198,6 +142,7 @@ public class CobroActivity extends BaseStatusBluetooth {
 
         });
 
+        // Venta Estudiante: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
         btnEstudiante.setOnClickListener(v -> {
             generateSingleTicketText("Estudiante", contador);
             acumularVenta("Estudiante", PRECIO_ESTUDIANTE);
@@ -206,11 +151,9 @@ public class CobroActivity extends BaseStatusBluetooth {
             reproducirSonidoClick();
         });
 
-
-
     }
 
-    //Metodo para cerrar sesión
+    //Metodo para cerrar sesión por el menu inferior de ventanas
     private void cerrarSesion() {
         new android.app.AlertDialog.Builder(this)
                 .setTitle("Cerrar sesión")
@@ -231,8 +174,7 @@ public class CobroActivity extends BaseStatusBluetooth {
                 .show();
     }
 
-
-
+    //Metodo para reproducir sonido el dar click en algun boton
     private void reproducirSonidoClick() {
         if (sonidoClick != null) {
             sonidoClick.release();
@@ -244,7 +186,6 @@ public class CobroActivity extends BaseStatusBluetooth {
         }
     }
 
-
     //Libera espacio en la memoria despues de los sonidos
     @Override
     protected void onDestroy() {
@@ -255,19 +196,14 @@ public class CobroActivity extends BaseStatusBluetooth {
         }
     }
 
-
-
-
+    // Metodo para obtener la fecha actual que sera utilizada en los tickets individuales
     public String obtenerFechaActual() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         Date date = new Date();
         return dateFormat.format(date);
     }
 
-
-    /**
-     * Acumula la venta en los mapas para los cortes.
-     */
+    //Acumula la venta en los mapas para los cortes.
     public void acumularVenta(String tipo, double precio) {
         String fecha = obtenerFechaActual();
         for (int i = 0; i < contador; i++) {
@@ -275,19 +211,14 @@ public class CobroActivity extends BaseStatusBluetooth {
         }
     }
 
-    /**
-     * Reinicia el contador individual a 1 y actualiza la vista.
-     */
+    //Reinicia el contador individual a 1 y actualiza la vista.
+
     private void resetCounter() {
         contador = 1;
         tvNumero.setText(String.valueOf(contador));
     }
 
-
-
-    /**
-     * Genera un ticket individual en formato de texto y lo muestra en un diálogo.
-     */
+    //Genera el ticket individual en formato de texto y lo muestra en un diálogo.
     private void generateSingleTicketText(String tipo, int cantidad) {
         String fechaHora = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy", Locale.getDefault()).format(new Date());
         int precio;
@@ -335,7 +266,7 @@ public class CobroActivity extends BaseStatusBluetooth {
             printTicket(mensajeIndividual);
             numeroTransaccion++;
 
-            // Guardar el nuevo número en SharedPreferences
+            // Guardar el nuevo de transaccion número en SharedPreferences
             prefs.edit().putInt("numeroTransaccion", numeroTransaccion).apply();
         }
     }
@@ -350,10 +281,7 @@ public class CobroActivity extends BaseStatusBluetooth {
      */
 
 
-
-    /**
-     * Imprime el contenido del ticket si la conexión está activa
-     */
+    //Imprime el contenido del ticket si la conexión está activa
     private void printTicket(String content) {
         if (isBluetoothConnected()) {
             try {
@@ -385,10 +313,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         }
     }
 
-
-    /**
-     * Muestra el contenido de texto en un AlertDialog para visualizar el ticket.
-     */
+    //Muestra el contenido de texto en un AlertDialog para visualizar el ticket.
     private void showTextDialog(String title, String content) {
         new AlertDialog.Builder(this)
                 .setTitle(title)
@@ -401,48 +326,4 @@ public class CobroActivity extends BaseStatusBluetooth {
                 })
                 .show();
     }
-
-
-
-    /*
-    Metodo no utilizado
-
-
-    /**
-     * Solicita la contraseña antes de realizar acciones críticas (Corte Parcial, Corte Total, Bluetooth).
-
-    private void solicitarPassword(String accion, Runnable accionARealizar) {
-        // Crear un cuadro de diálogo para ingresar la contraseña
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("🔒 Verificación Requerida");
-        builder.setMessage("Ingrese la contraseña para " + accion);
-
-        // Crear un EditText para la entrada de contraseña
-        final EditText input = new EditText(this);
-        input.setHint("Contraseña");
-        builder.setView(input);
-
-        // Botón para validar la contraseña
-        builder.setPositiveButton("Aceptar", (dialog, which) -> {
-            String inputPassword = input.getText().toString().trim();
-
-            // Verificar si la contraseña es correcta
-            if (inputPassword.equals(passwordUsuario)) {
-                // Si es correcta, ejecutar la acción solicitada
-                accionARealizar.run();
-            } else {
-                // Mostrar error si la contraseña es incorrecta
-                Toast.makeText(this, "⚠️ Contraseña incorrecta. No se puede continuar.", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        // Botón para cancelar
-        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss());
-
-        // Mostrar el cuadro de diálogo
-        builder.show();
-    }
- */
-
-
 }

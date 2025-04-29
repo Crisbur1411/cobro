@@ -1,3 +1,4 @@
+// Base de datos para Control de registro de usuarios y verificacion de credenciales en login
 package com.example.cobro;
 
 import android.content.ContentValues;
@@ -9,12 +10,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "usuarios.db";
-    private static final int DATABASE_VERSION = 7;
+    private static final int DATABASE_VERSION = 7; // La version debe actualizarse con cada cambio realizado a la base de datos
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    // Creacion de tabla de usuarios
     @Override
     public void onCreate(SQLiteDatabase db) {
         String CREATE_TABLE_USUARIOS = "CREATE TABLE usuarios( " +
@@ -34,7 +36,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // Método para insertar usuarios
+    // Metodo para insertar usuarios
     public boolean insertarUsuario(String usuario, String contraseña, String identificador, String userPhone) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues valores = new ContentValues();
@@ -48,7 +50,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return resultado != -1;
     }
 
-    // Método para verificar usuario
+    // Metodo para verificar usuario en el inicio de sesion
     public boolean verificarUsuario(String usuario, String contraseña) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM usuarios WHERE usuario=? AND contraseña=?", new String[]{usuario, contraseña});
@@ -58,7 +60,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return existe;
     }
 
-
     // Metodo para borrar los detalles de cortes
     public void borrarUsuarios() {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -66,8 +67,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-
-
+    // Metodo para obtener el id del usuario para posteriormente obtener su informacion de la base de datos
     public int obtenerIdUsuarioPorEmail(String email) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT id FROM usuarios WHERE usuario = ?", new String[]{email});
@@ -81,10 +81,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return userId;
     }
 
+    // Metodo para obtener identificador de dispositivo y telefono del usuario por medio del id
     public Cursor obtenerUsuarioPorId(int idUsuario) {
         SQLiteDatabase db = this.getReadableDatabase();
         return db.rawQuery("SELECT identificador, phone FROM usuarios WHERE id = ?", new String[]{String.valueOf(idUsuario)});
     }
-
-
 }

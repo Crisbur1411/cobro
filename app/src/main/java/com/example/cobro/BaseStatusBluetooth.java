@@ -1,3 +1,5 @@
+//Maneja la verificacion de conexion a bluetooth para ser actualizada de manera constante
+
 package com.example.cobro;
 
 import android.content.pm.PackageManager;
@@ -33,9 +35,7 @@ public abstract class BaseStatusBluetooth extends AppCompatActivity {
         };
     }
 
-    /**
-     * Verifica si la impresora Bluetooth está conectada
-     */
+    //Verifica si la impresora Bluetooth está conectada
     protected boolean isBluetoothConnected() {
         if (Bluetooth.bluetoothSocket != null) {
             try {
@@ -57,9 +57,8 @@ public abstract class BaseStatusBluetooth extends AppCompatActivity {
         return false;
     }
 
-    /**
-     * Actualiza el estado de la conexión Bluetooth en pantalla
-     */
+
+     //Actualiza el estado de la conexión Bluetooth en pantalla
     protected void actualizarEstadoConexion() {
         if (tvEstadoConexion != null) {
             if (isBluetoothConnected()) {
@@ -75,12 +74,14 @@ public abstract class BaseStatusBluetooth extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        //Realiza la verificacion de forma constante
         actualizarEstadoConexion();
         handler.post(checkConnectionRunnable);
     }
 
     @Override
     protected void onPause() {
+        //Detiene la verificación de conexión una vez que el app es cerrada
         super.onPause();
         handler.removeCallbacks(checkConnectionRunnable);
     }

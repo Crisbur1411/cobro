@@ -1,3 +1,7 @@
+/*
+ * Esta actividad muestra un cuadro de diálogo cuando la sesión ha expirado y ofrece la opción de renovar el token de sesión o finalizarla.
+ * Esto haciendo el envio de las credenciales que se almacenaron del usuario
+ */
 package com.example.cobro;
 
 import android.app.Activity;
@@ -12,13 +16,16 @@ import retrofit2.Response;
 
 public class SessionManager {
 
+    // Instancia única de SessionManager para manejar la sesión en toda la aplicación
     private static SessionManager instance;
     private Activity activity;
 
+    // Constructor privado que recibe la actividad donde se utilizará la gestión de sesión
     private SessionManager(Activity activity) {
         this.activity = activity;
     }
 
+    // Metodo que devuelve la instancia única de SessionManager, asociada a una actividad específica
     public static SessionManager getInstance(Activity activity) {
         if (instance == null) {
             instance = new SessionManager(activity);
@@ -28,6 +35,10 @@ public class SessionManager {
         return instance;
     }
 
+    /*
+     * Metodo que muestra un cuadro de diálogo cuando la sesión ha expirado.
+     * Ofrece al usuario la opción de renovar su sesión o cerrar la aplicación y volver al inicio.
+     */
     public void showSessionExpiredDialog() {
         if (activity != null && !activity.isFinishing()) {
             new AlertDialog.Builder(activity)
@@ -48,6 +59,11 @@ public class SessionManager {
         }
     }
 
+    /*
+     * Metodo privado que intenta renovar el token de sesión utilizando las credenciales almacenadas en preferencias compartidas.
+     * Si la renovación es exitosa, actualiza el token en las preferencias y muestra un cuadro de confirmación.
+     * En caso de error, notifica al usuario mediante un Toast.
+     */
     private void refreshSessionToken() {
         SharedPreferences prefs = activity.getSharedPreferences("AppPrefs", Context.MODE_PRIVATE);
         String usuario = prefs.getString("userUsuario", null);

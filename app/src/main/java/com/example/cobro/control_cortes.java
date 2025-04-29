@@ -1,3 +1,5 @@
+//Meneja la base de datos general donde se realiza el almacenamiento de cortes totales, parciales y ventas individuales
+//Tambien maneja las consultas para mostrar la informacion y estructurar los Json para enviar al APi
 package com.example.cobro;
 
 import android.content.ContentValues;
@@ -21,8 +23,9 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 16;
+    private static final int DATABASE_VERSION = 16; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
 
+    //Creacion de tabla donde se almacenan los cortes parciales con la informacion de ventas
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -38,7 +41,7 @@ public class control_cortes extends SQLiteOpenHelper {
                     "totalCorte REAL);";
 
 
-    //Tabla para detalles de corte parcial
+    //Tabla para detalles de corte parcial, es la tabla de referencia para construir el json de cortes parciales
     private static final String TABLE_CREATE_CORTE_DETALLE =
             "CREATE TABLE DetalleCorteParcial (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -49,7 +52,7 @@ public class control_cortes extends SQLiteOpenHelper {
                     "price REAL," +
                     "status INTEGER);";
 
-
+    // Tabla de corte total, almacena la informacion de todas las ventas del dia acumuladas
     private static final String TABLE_CORTE_TOTAL =
             "CREATE TABLE corte_total(" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -64,6 +67,7 @@ public class control_cortes extends SQLiteOpenHelper {
                     "total_recaudado REAL, " +
                     "status INTEGER);";
 
+    // Tabla de boletos vendidos, esta tabla almacena cada uno de los boletos que se han vendido.
     private static final String CREATE_BOLETOS_VENDIDOS =
             "CREATE TABLE boletos_vendidos (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -79,6 +83,7 @@ public class control_cortes extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    // Se inicialzan las tablas
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(TABLE_CREATE);
@@ -88,6 +93,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
     }
 
+    // Gestiona las actualizaciones del esquema de la base de datos local
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS cortes");
@@ -97,10 +103,9 @@ public class control_cortes extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    /**
-     * Inserta un corte parcial en la base de datos.
-     * @return el ID de la fila insertada, o -1 si hay error
-     */
+    // Metodos para insertar cortes parciales, totales y boletos individuales-------------------------------
+
+    //Metodo para Insertas un corte parcial en la base de datos.
     public long insertarCorteParcial(int numeroCorte,
                                      int pasajerosNormal,
                                      int pasajerosEstudiante,
@@ -133,6 +138,7 @@ public class control_cortes extends SQLiteOpenHelper {
         return result;
     }
 
+    // Metodo para Insertas la informacion del corte total
     public long insertarCorteTotal(String nombre, String fechaHora, int pasajerosNormal, double totalNormal,
                                    int pasajerosEstudiante, double totalEstudiante,
                                    int pasajerosTerceraEdad, double totalTerceraEdad,
@@ -155,66 +161,8 @@ public class control_cortes extends SQLiteOpenHelper {
         return resultado;
     }
 
-    public void insertarBoleto(String tipo, double precio, String fecha) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("tipo", tipo);
-        values.put("precio", precio);
-        values.put("fecha", fecha);
-        values.put("status", 0); // pendiente
-        db.insert("boletos_vendidos", null, values);
-        db.close();
-    }
 
-
-
-
-    /**
-     * Devuelve la suma de todos los cortes (parciales) registrados.
-     * Para generar el Corte Total.
-     */
-    public Cursor getResumenCortes() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT " +
-                "SUM(pasajeros_normal) AS sumPN, " +
-                "SUM(pasajeros_estudiante) AS sumPE, " +
-                "SUM(pasajeros_tercera_edad) AS sumPTE, " +
-                "SUM(total_normal) AS sumTN, " +
-                "SUM(total_estudiante) AS sumTE, " +
-                "SUM(total_tercera_edad) AS sumTTE " +
-                "FROM cortes WHERE status = 1";
-        return db.rawQuery(query, null);
-    }
-
-
-    public Cursor obtenerBoletosVendidosPorTipo(String tipo) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM boletos_vendidos WHERE tipo = ? AND status = 0", new String[]{tipo});
-    }
-
-
-    /**
-     * Borra todos los registros de la tabla 'cortes'.
-
-    public void borrarCortes() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("DELETE FROM cortes");
-        db.close();
-    }
-
-
-    // Metodo para borrar los detalles de cortes
-    public void borrarDetallesCortes() {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.execSQL("DELETE FROM DetalleCorteParcial");
-        db.close();
-    }
-     */
-
-
-
-
-    //Guardar detalles del corte parcial
+    //Metodo para Guardar detalles del corte parcial, los cuales se usaran en el Json
     public long guardarDetalleCorte(String user, String timestamp, int routeFareId, int quantity, double price, int status) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -228,8 +176,55 @@ public class control_cortes extends SQLiteOpenHelper {
         return db.insert("DetalleCorteParcial", null, values);
     }
 
+    //Metodo para insertar boletos individuales
+    public void insertarBoleto(String tipo, double precio, String fecha) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("tipo", tipo);
+        values.put("precio", precio);
+        values.put("fecha", fecha);
+        values.put("status", 0); // pendiente
+        db.insert("boletos_vendidos", null, values);
+        db.close();
+    }
 
-    //Obtener todos los cortes parciales y estructurarlos en formato json
+    // Aqui terminan los metodos de insertar----------------------------------
+
+
+
+    /*
+     *Metodos para obtener informacion de las
+     *tablas para estructurar Json de los cortes o simplemente cortes. -------------------------------
+     */
+
+    //Metodo que Devuelve la suma de todos los cortes (parciales) registrados con status 1 de sincronizados.
+    public Cursor getResumenCortes() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT " +
+                "SUM(pasajeros_normal) AS sumPN, " +
+                "SUM(pasajeros_estudiante) AS sumPE, " +
+                "SUM(pasajeros_tercera_edad) AS sumPTE, " +
+                "SUM(total_normal) AS sumTN, " +
+                "SUM(total_estudiante) AS sumTE, " +
+                "SUM(total_tercera_edad) AS sumTTE " +
+                "FROM cortes WHERE status = 1";
+        return db.rawQuery(query, null);
+    }
+
+    /*
+     *Metodo para Obtener los boletos individuales por tipo y con estatus 0 para utilizados en el corte parcial
+     *Y posteriormente registrarlos en cortes parciales
+     */
+    public Cursor obtenerBoletosVendidosPorTipo(String tipo) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM boletos_vendidos WHERE tipo = ? AND status = 0", new String[]{tipo});
+    }
+
+
+    /*
+     *Obtener todos los cortes parciales de la tabla de DetalleCorteParcial con status 1
+     *Para poder estructurarse en el Json de corte total. (Se usa para generar el Json corte total)
+     */
     public List<JSONObject> obtenerTodosLosCortesParcialesEstructurado() {
         List<JSONObject> cortesEstructurados = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -238,7 +233,7 @@ public class control_cortes extends SQLiteOpenHelper {
             String query = "SELECT * FROM DetalleCorteParcial WHERE status = 1 ORDER BY timestamp DESC";
             Cursor cursor = db.rawQuery(query, null);
 
-            // Usamos un mapa para agrupar por usuario + timestamp
+            // se usa un mapa para agrupar por usuario + timestamp
             Map<String, JSONObject> mapaCortes = new LinkedHashMap<>();
 
             if (cursor.moveToFirst()) {
@@ -251,7 +246,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
                     String clave = user + "_" + timestamp;
 
-                    // Si no existe el objeto base aún, lo creamos
+                    // Si no existe el objeto base aún, se crea
                     if (!mapaCortes.containsKey(clave)) {
                         JSONObject corte = new JSONObject();
                         corte.put("user", user);
@@ -260,11 +255,11 @@ public class control_cortes extends SQLiteOpenHelper {
                         mapaCortes.put(clave, corte);
                     }
 
-                    // Añadimos la venta a la lista de sales
+                    // Se añade la venta a la lista de sales
                     JSONObject venta = new JSONObject();
                     venta.put("route_fare_id", routeFareId);
                     venta.put("quantity", quantity);
-                    venta.put("price", (int) price); // Cast si quieres enteros
+                    venta.put("price", (int) price);
 
                     // Insertar venta en el array correspondiente
                     JSONArray ventas = mapaCortes.get(clave).getJSONArray("sales");
@@ -275,7 +270,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
             cursor.close();
 
-            // Agregamos todos los objetos al resultado final
+            // se agregan todos los objetos al resultado final
             cortesEstructurados.addAll(mapaCortes.values());
 
         } catch (Exception e) {
@@ -286,9 +281,10 @@ public class control_cortes extends SQLiteOpenHelper {
     }
 
 
-
-
-    //Obtener todos los cortes parciales y estructurarlos en formato json
+    /*
+     *Obtener todos los cortes parciales con status 3 (No enviados) y estructurarlos en formato json
+     *Para sincronizar todos los cortes parciales no sincronizados con el servidor
+     */
     public List<JSONObject> CortesParcialesNoEnviados() {
         List<JSONObject> cortesEstructurados = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -297,7 +293,7 @@ public class control_cortes extends SQLiteOpenHelper {
             String query = "SELECT * FROM DetalleCorteParcial WHERE status = 3 ORDER BY timestamp DESC";
             Cursor cursor = db.rawQuery(query, null);
 
-            // Usamos un mapa para agrupar por usuario + timestamp
+            // Se usa un mapa para agrupar por usuario + timestamp
             Map<String, JSONObject> mapaCortes = new LinkedHashMap<>();
 
             if (cursor.moveToFirst()) {
@@ -310,7 +306,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
                     String clave = user + "_" + timestamp;
 
-                    // Si no existe el objeto base aún, lo creamos
+                    // Si no existe el objeto base aún, se crea
                     if (!mapaCortes.containsKey(clave)) {
                         JSONObject corte = new JSONObject();
                         corte.put("user", user);
@@ -319,11 +315,11 @@ public class control_cortes extends SQLiteOpenHelper {
                         mapaCortes.put(clave, corte);
                     }
 
-                    // Añadimos la venta a la lista de sales
+                    // Añadir la venta a la lista de sales
                     JSONObject venta = new JSONObject();
                     venta.put("route_fare_id", routeFareId);
                     venta.put("quantity", quantity);
-                    venta.put("price", (int) price); // Cast si quieres enteros
+                    venta.put("price", (int) price);
 
                     // Insertar venta en el array correspondiente
                     JSONArray ventas = mapaCortes.get(clave).getJSONArray("sales");
@@ -334,7 +330,7 @@ public class control_cortes extends SQLiteOpenHelper {
 
             cursor.close();
 
-            // Agregamos todos los objetos al resultado final
+            // Se agregan todos los objetos al resultado final
             cortesEstructurados.addAll(mapaCortes.values());
 
         } catch (Exception e) {
@@ -344,7 +340,13 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortesEstructurados;
     }
 
+    // Aqui terminan los metodos para obtener los datos para generar los Json de cortes---------------------------
 
+
+    //Metodos de actualizacion de status---------------------------------------
+
+    // Metodo para actualizar el status de DetalleCorteParcial de 1 (Sincronizado) a 2 (Status Final)
+    // De la tabla DetalleCorteParcial la cual almacena los cortes parciales de manera que se pueda usar para el formato Json
     public void actualizarEstatusDetalleCorte(int nuevoStatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -354,6 +356,8 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
+    // Metodo para actualizar status de DetalleCorteParcial de 3 (No sincronizado) a 1 (Sincronizado).
+    // De la tabla DetalleCorteParcial la cual almacena los cortes parciales de manera que se pueda usar para el formato Json
     public void actualizarEstatusCortesNoEnviados(int nuevoStatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -363,6 +367,7 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
+    //Metodo para actualizar el corte total de estatus 1 (Registrado) a 2 (Sincronizado - Status final)
     public void actualizarEstatusCorteTotal(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -372,7 +377,7 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
-
+    // Metodo para actualizar el status de los cortes totales no sincronizados de 3 (No sincronizados) a 2 (Sincronizado - Status final)
     public void actualizarEstatusCorteTotalNoEnviado(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -383,7 +388,8 @@ public class control_cortes extends SQLiteOpenHelper {
     }
 
 
-    //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 1 para ser utilizados en corte total
+    //Metodo para actualizar el status de los cortes parciales de 0 (registrados) a 1 (Sincronizados)
+    //De la tabla de cortes la cual muestra el resumen de ventas por corte
     public void actualizarEstatusCortesParcialesParaCorteTotal(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -393,7 +399,8 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
-    //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 3 para no sincornizados
+    //Metodo para actualizar el status de los cortes parciales de 0 (registrados) a 3 (No Sincronizados)
+    //De la tabla de cortes la cual muestra el resumen de ventas por corte
     public void actualizarEstatusCortesParcialesNoSincronizados(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -403,7 +410,8 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
-    //Metodo para actualizar los cortes parciales que contienen informacion como cantidad de tickets y de precios a 1 para sincornizados y ser usados por corte total
+    //Metodo para actualizar el status de los cortes parciales de 3 (No Sincronizados) a 1 (Sincronizados)
+    //De la tabla de cortes la cual muestra el resumen de ventas por corte
     public void actualizarEstatusCortesParcialesASincronizado(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -413,7 +421,8 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
-
+    //Metodo para actualizar el status de los cortes parciales de 1 (Sincronizados) a 2 (Enviados - Status final)
+    //De la tabla de cortes la cual muestra el resumen de ventas por corte
     public void actualizarEstatusCortesParcialesAEnviados(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -423,6 +432,7 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
+    // Metodo para actualizar el status de boletos_vendidos de 0 (Registrado) a 1 (Sincronizado)
     public void actualizarEstatusBoletos(int nuevoEstatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -432,22 +442,12 @@ public class control_cortes extends SQLiteOpenHelper {
         db.close();
     }
 
-
-    //Metodo para detectar si existen cortes parciales pendientes para no permitir generar el corte total
-    public boolean existenCortesPendientes() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT id FROM cortes WHERE status = 3 LIMIT 1", null);
-        boolean existenPendientes = (cursor != null && cursor.moveToFirst());
-        if (cursor != null) cursor.close();
-        return existenPendientes;
-    }
+    //Aqui terminan los metodos para actualizar status----------------------------------------------------
 
 
+    //Metodos para mostrar la informacion de los boletos, cortes parciales y cortes totales en la lista---------------------
 
-
-
-
-
+    //Metodo para obtener todos los cortes totales y mostrarlos en la lsita
     public List<CorteTotal> getCortesTotales() {
         List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -482,6 +482,7 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortes;
     }
 
+    //Metodo para obtener todos los cortes totales y filtrar por fecha para mostrar en la lista
     public List<CorteTotal> getCortesPorFecha(String fecha) {
         List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -518,10 +519,7 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortes;
     }
 
-
-
-
-
+    //Metodo para obtener todos los cortes parciales y mostrarlos en la lista
     public List<CorteTotal> getCortesParciales() {
         List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -559,6 +557,7 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortes;
     }
 
+    //Metodo para obtener todos los cortes parciales y filtrar por fecha para mostrar en la lista
     public List<CorteTotal> getCortesParcialesPorFecha(String fecha) {
         List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -597,8 +596,7 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortes;
     }
 
-
-
+    //Metodo para obtener los boletos con status 0 se utiliza para los cortes parciales y para mostrar en la lista
     public List<CorteTotal> getVentas() {
         List<CorteTotal> ventas = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -629,6 +627,7 @@ public class control_cortes extends SQLiteOpenHelper {
         return ventas;
     }
 
+    //Metodo para obtener todos los boletos y filtrar por fecha para mostrar en la lista
     public List<CorteTotal> getVentasPorFecha(String fecha) {
         List<CorteTotal> ventas = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -661,12 +660,30 @@ public class control_cortes extends SQLiteOpenHelper {
         return ventas;
     }
 
+    //Metodo para detectar si existen cortes parciales pendientes para no permitir generar el corte total
+    public boolean existenCortesPendientes() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT id FROM cortes WHERE status = 3 LIMIT 1", null);
+        boolean existenPendientes = (cursor != null && cursor.moveToFirst());
+        if (cursor != null) cursor.close();
+        return existenPendientes;
+    }
 
+    /**
+     * Borra todos los registros de la tabla 'cortes'.
 
+     public void borrarCortes() {
+     SQLiteDatabase db = this.getWritableDatabase();
+     db.execSQL("DELETE FROM cortes");
+     db.close();
+     }
 
-
-
-
-
+     // Metodo para borrar los detalles de cortes
+     public void borrarDetallesCortes() {
+     SQLiteDatabase db = this.getWritableDatabase();
+     db.execSQL("DELETE FROM DetalleCorteParcial");
+     db.close();
+     }
+     */
 
 }

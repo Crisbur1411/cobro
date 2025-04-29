@@ -1,3 +1,6 @@
+//Actividad que se encarga de realizar la conexion con bluetooth
+//Genera la lista de dispositivos y solicita permisos en caso de ser necesarios, ademas de inicializar la impresora
+
 package com.example.cobro;
 
 import android.Manifest;
@@ -46,7 +49,7 @@ public class Bluetooth extends AppCompatActivity {
         // Verificar permisos para Bluetooth
         requestPermissions();
 
-        //Navegacion de secciones
+        //Navegacion de secciones en el menu inferior
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.nav_conexion);
 
@@ -68,7 +71,7 @@ public class Bluetooth extends AppCompatActivity {
         });
 
         ListView devicesListView = findViewById(R.id.devices_list_view);
-
+//Arreglo para mostrar los dispositivos
         devicesArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         devicesListView.setAdapter(devicesArrayAdapter);
 
@@ -112,7 +115,7 @@ public class Bluetooth extends AppCompatActivity {
         }
     }
 
-    //Metodo para cerrar sesión
+    //Metodo para cerrar sesión con el menu inferior
     private void cerrarSesion() {
         new AlertDialog.Builder(this)
                 .setTitle("Cerrar sesión")

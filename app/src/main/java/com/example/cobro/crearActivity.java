@@ -1,3 +1,4 @@
+// Actividad para crear un nuevo usuario, Utiliza la base de datos DatabaseHelper
 package com.example.cobro;
 
 import android.content.Intent;
@@ -6,87 +7,96 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 import com.google.android.material.textfield.TextInputEditText;
-
 import androidx.appcompat.app.AppCompatActivity;
 import android.media.MediaPlayer;
-
-import com.google.android.material.textfield.TextInputEditText;
-
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Response;
 
 public class crearActivity extends AppCompatActivity {
 
+    // Inputs de usuario, password e identificador desde el XML
     TextInputEditText usuarioInput, passwordInput, identificadorInput;
+
+    // Botones para crear y borrar usuarios
     Button btnCrear, btnBorrar;
+
+    // Helper para manejar la base de datos SQLite local
     DatabaseHelper dbHelper;
+
+    // Sonido que se reproduce al presionar botones
     private MediaPlayer sonidoClick;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crear);
+
+        // Inicializar sonido de click
         sonidoClick = MediaPlayer.create(this, R.raw.click);
 
-
-        // Conectar con los elementos del XML
+        // Conectar elementos visuales con variables Java
         usuarioInput = findViewById(R.id.usuarioInput);
         passwordInput = findViewById(R.id.passwordInput);
         identificadorInput = findViewById(R.id.identificadorInput);
         btnCrear = findViewById(R.id.butto);
         btnBorrar = findViewById(R.id.borrarDatos);
 
-        // Inicializar la base de datos
+        // Instanciar base de datos local
         dbHelper = new DatabaseHelper(this);
 
+        // Acción al presionar "Borrar datos"
         btnBorrar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Llamamos al metodo para reproducir Sonido
+                // Sonido al presionar
                 reproducirSonidoClick();
-
-                // Llamada a la función de borrar usuarios en SQLite
+                // Borrar todos los usuarios de SQLite
                 dbHelper.borrarUsuarios();
-
                 Toast.makeText(crearActivity.this, "Usuarios eliminados de la base de datos local", Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Acción al presionar el botón
+        // Acción al presionar "Crear usuario"
         btnCrear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Llamamos al metodo para reproducir Sonido
+                // Sonido al presionar
                 reproducirSonidoClick();
+                // Registrar usuario validando en API
                 registrarUsuario();
             }
         });
     }
 
+    // Metodo para registrar usuario validando contra el API
     private void registrarUsuario() {
+        // Obtener datos desde los inputs
         String usuario = usuarioInput.getText().toString().trim();
         String contraseña = passwordInput.getText().toString().trim();
         String identificador = identificadorInput.getText().toString().trim();
 
+        // Validar que no haya campos vacíos
         if (usuario.isEmpty() || contraseña.isEmpty() || identificador.isEmpty()) {
             Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Enviar petición de login al API para validar credenciales
+        // Armar petición de login al API con usuario y contraseña
         LoginRequest request = new LoginRequest(usuario, contraseña);
+
+        // Enviar login al API y manejar respuesta
         ApiClient.getApiService().login(request).enqueue(new retrofit2.Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
+                    // Obtener usuario y teléfono del API
                     String userFromApi = response.body().getData().getUser().getEmail();
                     String userPhone = response.body().getData().getUser().getPhone();
                     List<LoginResponse.Cash_Point> cashPoints = response.body().getData().getCashPoints();
 
+                    // Validar si identificador existe y si está activo
                     String identificadorIngresado = identificadorInput.getText().toString().trim();
-
                     boolean encontrado = false;
                     boolean activo = false;
 
@@ -100,24 +110,31 @@ public class crearActivity extends AppCompatActivity {
                         }
                     }
 
+                    // Si no existe, se muestra mensaje
                     if (!encontrado) {
                         Toast.makeText(crearActivity.this, "Identificador no valido", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
+                    // Si está bloqueado, se muestra mensaje
                     if (!activo) {
                         Toast.makeText(crearActivity.this, "Error al registrar, Dispositivo bloqueado", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
+                    // Si usuario coincide con el del API
                     if (userFromApi.equals(usuario)) {
+                        // Guardar usuario en SQLite
                         boolean insertado = dbHelper.insertarUsuario(usuario, contraseña, identificadorIngresado, userPhone);
                         if (insertado) {
                             Toast.makeText(crearActivity.this, "Usuario registrado con éxito", Toast.LENGTH_SHORT).show();
+
+                            // Limpiar inputs
                             usuarioInput.setText("");
                             passwordInput.setText("");
                             identificadorInput.setText("");
 
+                            // Ir a MainActivity
                             Intent intent = new Intent(crearActivity.this, MainActivity.class);
                             startActivity(intent);
                             finish();
@@ -132,23 +149,25 @@ public class crearActivity extends AppCompatActivity {
                 }
             }
 
-
-
+            // Si falla la petición al servidor
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 Toast.makeText(crearActivity.this, "Error de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
-        private void reproducirSonidoClick () {
-            if (sonidoClick != null) {
-                sonidoClick.release();
-                sonidoClick = null;
-            }
-            sonidoClick = MediaPlayer.create(crearActivity.this, R.raw.click);
-            if (sonidoClick != null) {
-                sonidoClick.start();
-            }
+
+    // Reproduce sonido de click al presionar botones
+    private void reproducirSonidoClick() {
+        if (sonidoClick != null) {
+            sonidoClick.release();
+            sonidoClick = null;
+        }
+        sonidoClick = MediaPlayer.create(crearActivity.this, R.raw.click);
+        if (sonidoClick != null) {
+            sonidoClick.start();
         }
     }
+}
+
 
