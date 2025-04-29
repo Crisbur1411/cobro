@@ -188,5 +188,16 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.152" />
 
+    <ImageView
+        android:id="@+id/calendario"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="164dp"
+        android:layout_marginTop="120dp"
+        android:contentDescription="Filtrar por fecha"
+        android:src="@drawable/calendario1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

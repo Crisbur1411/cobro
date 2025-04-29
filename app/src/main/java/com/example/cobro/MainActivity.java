@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity {
                         //SessionManager.getInstance(MainActivity.this).startSessionTimer();
 
                         Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
-                        Toast.makeText(MainActivity.this, "id " + userIdLocal, Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(MainActivity.this, "id " + userIdLocal, Toast.LENGTH_SHORT).show();
 
                         Intent intent = new Intent(MainActivity.this, Bluetooth.class);
                         startActivity(intent);
@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Toast.makeText(MainActivity.this, "Inicio de sesión local exitoso", Toast.LENGTH_SHORT).show();
 
-                Toast.makeText(MainActivity.this, "id " + userIdLocal, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MainActivity.this, "id " + userIdLocal, Toast.LENGTH_SHORT).show();
 
                 // Guardar usuario y contraseña localmente
                 SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);

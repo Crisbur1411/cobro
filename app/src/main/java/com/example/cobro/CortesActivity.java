@@ -1,6 +1,7 @@
 package com.example.cobro;
 
 import android.Manifest;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -39,6 +41,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -66,6 +69,10 @@ public class CortesActivity extends BaseStatusBluetooth {
 
     private String userPhone, identificador;
     private Handler handler = new Handler();
+    private ImageView calendario;
+    private String fechaSeleccionadaTotales = "";
+    private String fechaSeleccionadaParciales = "";
+    private String fechaSeleccionadaVentas = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +98,8 @@ public class CortesActivity extends BaseStatusBluetooth {
         btnTotales = findViewById(R.id.btnCortesTotales);
         btnVentas = findViewById(R.id.btnVentas);
 
+        //Se declara el calendario para el filtro
+        calendario = findViewById(R.id.calendario);
 
 
         //Lista de cortes totales
@@ -186,6 +195,16 @@ public class CortesActivity extends BaseStatusBluetooth {
         mostrarVentas();
 
 
+        //Accion a boton de calendario
+        calendario.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDatePickerDialog();
+            }
+        });
+
+
+
         btnParciales.setOnClickListener(v -> {
             cargaCortesParciales();
         });
@@ -210,9 +229,15 @@ public class CortesActivity extends BaseStatusBluetooth {
         btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
         btnVentas.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
 
-        List<CorteTotal> ventas = dbHelper.getVentas();
+        List<CorteTotal> ventas;
 
-        // Si está vacío, agregamos mensaje
+        // Aquí usas la nueva variable de fechaSeleccionadaVentas
+        if (!fechaSeleccionadaVentas.isEmpty()) {
+            ventas = dbHelper.getVentasPorFecha(fechaSeleccionadaVentas);
+        } else {
+            ventas = dbHelper.getVentas();
+        }
+
         if (ventas.isEmpty()) {
             ventas.add(new CorteTotal("Sin ventas", "", 0));
         }
@@ -221,28 +246,46 @@ public class CortesActivity extends BaseStatusBluetooth {
         listaTotales.setAdapter(adapter);
     }
 
-    private void cargaCortesParciales(){
+
+
+    private void cargaCortesParciales() {
         btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
         btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
         btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 
-        List<CorteTotal> cortes = dbHelper.getCortesParciales();
+        List<CorteTotal> cortes;
+
+        if (!fechaSeleccionadaParciales.isEmpty()) {
+            cortes = dbHelper.getCortesParcialesPorFecha(fechaSeleccionadaParciales);
+        } else {
+            cortes = dbHelper.getCortesParciales();
+        }
 
         CorteAdapter adapter = new CorteAdapter(this, cortes, true);
         listaTotales.setAdapter(adapter);
-
     }
 
-    private void cargaCortesTotales(){
+
+
+    private void cargaCortesTotales() {
         btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
         btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
         btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 
-        List<CorteTotal> cortes = dbHelper.getCortesTotales();
+        List<CorteTotal> cortes;
+
+        if (!fechaSeleccionadaTotales.isEmpty()) {
+            cortes = dbHelper.getCortesPorFecha(fechaSeleccionadaTotales);
+        } else {
+            cortes = dbHelper.getCortesTotales();
+        }
 
         CorteAdapter adapter = new CorteAdapter(this, cortes, true);
         listaTotales.setAdapter(adapter);
     }
+
+
+
 
 
 
@@ -451,6 +494,29 @@ public class CortesActivity extends BaseStatusBluetooth {
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         return prefs.getInt("numeroCorteParcial", 1); // Default a 1 si no existe
     }
+
+
+    //Metodo para mostrar el calendario
+    private void showDatePickerDialog() {
+        final Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, (view, year1, month1, dayOfMonth) -> {
+            fechaSeleccionadaTotales = String.format(Locale.getDefault(), "%02d/%02d/%04d", dayOfMonth, month1 + 1, year1);
+            fechaSeleccionadaParciales = String.format(Locale.getDefault(), "%04d-%02d-%02d", year1, month1 + 1, dayOfMonth);
+            fechaSeleccionadaVentas = String.format(Locale.getDefault(), "%04d-%02d-%02d", year1, month1 + 1, dayOfMonth);
+
+            // Lo de cortes puedes dejarlo o controlarlo desde donde llames el DatePicker
+            //cargaCortesParciales();
+            mostrarVentas();
+        }, year, month, day);
+
+        datePickerDialog.show();
+    }
+
+
 
     private void guardarCorteConError(String userPhone, String timestamp, List<SaleItem> ventas, int status) {
 

@@ -21,7 +21,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 14;
+    private static final int DATABASE_VERSION = 16;
 
     private static final String TABLE_CREATE =
             "CREATE TABLE cortes (" +
@@ -482,6 +482,45 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortes;
     }
 
+    public List<CorteTotal> getCortesPorFecha(String fecha) {
+        List<CorteTotal> cortes = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM corte_total WHERE fecha_hora LIKE ? AND status IN (1, 2, 3) ORDER BY fecha_hora DESC",
+                new String[]{fecha + "%"});
+
+        if (cursor.moveToFirst()) {
+            do {
+                String nombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre"));
+                String fechaHora = cursor.getString(cursor.getColumnIndexOrThrow("fecha_hora"));
+                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
+                int normal = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_normal"));
+                double totalNormal = cursor.getDouble(cursor.getColumnIndexOrThrow("total_normal"));
+                int estudiante = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_estudiante"));
+                double totalEstudiante = cursor.getDouble(cursor.getColumnIndexOrThrow("total_estudiante"));
+                int terceraEdad = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_tercera_edad"));
+                double totalTercer = cursor.getDouble(cursor.getColumnIndexOrThrow("total_tercera_edad"));
+                double totalRecaudado = cursor.getDouble(cursor.getColumnIndexOrThrow("total_recaudado"));
+
+                String info = "Fecha y hora: " + fechaHora + "\n" +
+                        "Pasaje Normal: " + normal + " - $" + String.format("%.2f", totalNormal) + "\n" +
+                        "Estudiante: " + estudiante + " - $" + String.format("%.2f", totalEstudiante) + "\n" +
+                        "Tercera Edad: " + terceraEdad + " - $" + String.format("%.2f", totalTercer) + "\n" +
+                        "Total Recaudado: $" + String.format("%.2f", totalRecaudado);
+
+                cortes.add(new CorteTotal(nombre, info, status));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return cortes;
+    }
+
+
+
+
 
     public List<CorteTotal> getCortesParciales() {
         List<CorteTotal> cortes = new ArrayList<>();
@@ -520,6 +559,45 @@ public class control_cortes extends SQLiteOpenHelper {
         return cortes;
     }
 
+    public List<CorteTotal> getCortesParcialesPorFecha(String fecha) {
+        List<CorteTotal> cortes = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery("SELECT * FROM cortes WHERE status IN (1, 2, 3) AND fecha_hora LIKE ? ORDER BY fecha_hora DESC",
+                new String[]{fecha + "%"});
+
+        if (cursor.moveToFirst()) {
+            do {
+                int numeroCorte = cursor.getInt(cursor.getColumnIndexOrThrow("numero_corte"));
+                String fechaHora = cursor.getString(cursor.getColumnIndexOrThrow("fecha_hora"));
+                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
+                int normal = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_normal"));
+                double totalNormal = cursor.getDouble(cursor.getColumnIndexOrThrow("total_normal"));
+                int estudiante = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_estudiante"));
+                double totalEstudiante = cursor.getDouble(cursor.getColumnIndexOrThrow("total_estudiante"));
+                int terceraEdad = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_tercera_edad"));
+                double totalTercer = cursor.getDouble(cursor.getColumnIndexOrThrow("total_tercera_edad"));
+                double totalCorte = cursor.getDouble(cursor.getColumnIndexOrThrow("totalCorte"));
+
+                String nombre = "Corte Parcial #" + numeroCorte;
+
+                String info = "Fecha y hora:" + fechaHora + "\n" +
+                        "Pasaje Normal: " + normal + " - $" + String.format("%.2f", totalNormal) + "\n" +
+                        "Estudiante: " + estudiante + " - $" + String.format("%.2f", totalEstudiante) + "\n" +
+                        "Tercera Edad: " + terceraEdad + " - $" + String.format("%.2f", totalTercer) + "\n" +
+                        "Total Recaudado: $" + String.format("%.2f", totalCorte);
+
+                cortes.add(new CorteTotal(nombre, info, status));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return cortes;
+    }
+
+
 
     public List<CorteTotal> getVentas() {
         List<CorteTotal> ventas = new ArrayList<>();
@@ -550,6 +628,40 @@ public class control_cortes extends SQLiteOpenHelper {
 
         return ventas;
     }
+
+    public List<CorteTotal> getVentasPorFecha(String fecha) {
+        List<CorteTotal> ventas = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        // Asumiendo que en boletos_vendidos tienes una columna 'fecha' con formato yyyy-MM-dd HH:mm:ss
+        Cursor cursor = db.rawQuery("SELECT * FROM boletos_vendidos WHERE status IN (0, 1) AND fecha LIKE ? ORDER BY fecha DESC",
+                new String[]{fecha + "%"});
+
+        if (cursor.moveToFirst()) {
+            do {
+                String tipo = cursor.getString(cursor.getColumnIndexOrThrow("tipo"));
+                double precio = cursor.getDouble(cursor.getColumnIndexOrThrow("precio"));
+                String fechaVenta = cursor.getString(cursor.getColumnIndexOrThrow("fecha"));
+                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
+
+                String nombre = "Venta de boleto: " + tipo;
+
+                String info = "Fecha: " + fechaVenta + "\n" +
+                        "Tipo: " + tipo + "\n" +
+                        "Precio: $" + String.format("%.2f", precio);
+
+                ventas.add(new CorteTotal(nombre, info, status));
+
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+
+        return ventas;
+    }
+
+
 
 
 
