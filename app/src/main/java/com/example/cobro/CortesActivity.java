@@ -1,53 +1,36 @@
 package com.example.cobro;
 
-import android.Manifest;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.media.MediaPlayer;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.PersistableBundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import retrofit2.Call;
@@ -63,13 +46,12 @@ public class CortesActivity extends BaseStatusBluetooth {
 
 
 
-    private LinearLayout Sincro_Totales;
+    private LinearLayout Sincro_Totales, Sincro_Parciales;
     private ListView listaTotales;
-    private TextView btnParciales, btnTotales ,btnVentas;
+    private TextView btnParciales, btnTotales ,btnVentas, ParcialTextView;
 
     private String userPhone, identificador;
-    private Handler handler = new Handler();
-    private ImageView calendario;
+    private ImageView calendario, ParcialiconView;
 
     private String fechaSeleccionada = "";
 
@@ -77,7 +59,8 @@ public class CortesActivity extends BaseStatusBluetooth {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cortes);
-//Declaración de elementos utilizados
+        //Declaración de elementos utilizados
+
         // Inicializar la base de datos
         dbHelper = new control_cortes(this);
         //Inicializar SharedPreferens
@@ -91,6 +74,11 @@ public class CortesActivity extends BaseStatusBluetooth {
         //Boton de corte parcial
         btnCorteParcial = findViewById(R.id.btnCorteParcial);
 
+        //Se declara el textview e icono de sincronizar cortes parciales
+        ParcialTextView = findViewById(R.id.sincronizar);
+        ParcialiconView = findViewById(R.id.iconView);
+
+
 
         //Botones mara mostrar los cortes parciales, totales y ventas
         btnParciales = findViewById(R.id.btnCortesParciales);
@@ -100,10 +88,8 @@ public class CortesActivity extends BaseStatusBluetooth {
         //Se declara el calendario para el filtro
         calendario = findViewById(R.id.calendario);
 
-
-        //Lista de cortes totales
+        //Lista donde se mostraran los cortes parciale, cortes totales y ventas
         listaTotales = findViewById(R.id.listViewCortes);
-
 
         //Navegacion de secciones
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -130,21 +116,38 @@ public class CortesActivity extends BaseStatusBluetooth {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         fechaSeleccionada = sdf.format(new Date());
 
-        // Cargar todo con la fecha de hoy
+        // Cargar cortes y ventas con la fecha actual
         cargaCortesTotales();
         cargaCortesParciales();
         mostrarVentas();
 
 
+        //Cambiar color del de letras de sincronizacion de cortes parciales como aviso
+        // Obtener cortes
+        List<JSONObject> cortesParcialesNoEnv = dbHelper.CortesParcialesNoEnviados();
+
+        // Cambiar color según si hay cortes
+        if (cortesParcialesNoEnv.isEmpty()) {
+            ParcialTextView.setTextColor(getResources().getColor(R.color.colorPrimary));
+            ParcialiconView.setImageResource(R.drawable.reenvio);
+        } else {
+            ParcialTextView.setTextColor(Color.RED);
+            ParcialiconView.setColorFilter(Color.RED);
+        }
 
 
         //Obtener identificador de dispoistivo y telefono desde la base de datos local
+        //Se obtiene el id almacenado en sharedPreferences
         int userIdLocal = sharedPreferences.getInt("userIdLocal", -1);  // Valor por defecto en caso de error
 
+        //Cuando se obtiene el id se inicia la condicion
         if (userIdLocal != -1) {
+            //Se inicializa la base de datos y se llama al metodo de obtenerUsuarioPorId
+            //Para obtener los datos
             DatabaseHelper dbHelper = new DatabaseHelper(this);
             Cursor cursor = dbHelper.obtenerUsuarioPorId(userIdLocal);
 
+            //Cuando la condición se cumple obtiene el identificador y el telefono
             if (cursor != null && cursor.moveToFirst()) {
                 int identificadorIndex = cursor.getColumnIndexOrThrow("identificador");
                 int phoneIndex = cursor.getColumnIndexOrThrow("phone");
@@ -153,12 +156,13 @@ public class CortesActivity extends BaseStatusBluetooth {
                 userPhone = cursor.getString(phoneIndex);
 
                 Log.d("DatosUsuario", "Identificador: " + identificador + ", Teléfono: " + userPhone);
-                // Aquí puedes usar las variables 'identificador' y 'phone' para mostrar en la UI, etc.
 
+            // Cuando la condicion no se cumple muestra el mensaje
             } else {
                 Log.d("DatosUsuario", "No se encontró usuario con ID: " + userIdLocal);
             }
 
+            //Se inicaliza otra condicion para verificar si se obtuvo el id desde sharedPreferences
             if (cursor != null) {
                 cursor.close();
             }
@@ -166,42 +170,35 @@ public class CortesActivity extends BaseStatusBluetooth {
             Log.d("DatosUsuario", "No se encontró el ID de usuario en SharedPreferences");
         }
 
-        //Toast.makeText(this, "telefono " + userPhone +" y mac " + identificador, Toast.LENGTH_SHORT).show();
 
-
-
-        //Acción para Enviar cortes totales no enviados
+        //Se declara el boton con el que se sincronizan los cortes totales no enviados
         Sincro_Totales = findViewById(R.id.Sincro_Totales);
+
+        //Se declara el boton con el que se sincronizan los cortes parciales no enviados
+        Sincro_Parciales = findViewById(R.id.textViewWithIcon);
+
+        //Se inicializa actualizarEstadoConexion para mostrar el mensaje de conexion bluetooth
+        actualizarEstadoConexion();
+
+
+        //Ocultar botones de corte total(Generar corte total y sincronizar corte total.------------------------>
+
+        //Se ocultan botones de corte total
+        btnCorteTotal.setVisibility(View.GONE);
+        Sincro_Totales.setVisibility(View.GONE);
+        //Se ocultan botones de corte parcial
+        btnCorteParcial.setVisibility(View.GONE);
+        Sincro_Parciales.setVisibility(View.GONE);
+
+        //Acciones  de botones------------------------------------------------------>
 
 
         // Boton de para llamar al metodo de corte total
         btnCorteTotal.setOnClickListener(v -> EnvioCorteTotal());
 
+        // Boton de para llamar al metodo de corte parcial
+        btnCorteParcial.setOnClickListener(v -> realizarCorteParcial());
 
-        //Acción para Enviar cortes parciales no enviados
-        LinearLayout textViewWithIcon = findViewById(R.id.textViewWithIcon);
-
-        textViewWithIcon.setOnClickListener(v -> {
-            EnviarCortesNoEnviados();
-        });
-
-        actualizarEstadoConexion();
-
-
-        Sincro_Totales.setOnClickListener(v -> {
-            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
-            String jsonGuardado = prefs.getString("jsonPendiente", null);
-
-            if (jsonGuardado != null) {
-                reenviarCorteTotal(jsonGuardado);
-            } else {
-                Toast.makeText(this, "No hay corte pendiente por enviar", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
-        //Mostrar ventas por defecto
-        mostrarVentas();
 
 
         //Accion a boton de calendario
@@ -216,10 +213,24 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         btnParciales.setOnClickListener(v -> {
             cargaCortesParciales();
+            //Se ocultan botones de corte total
+            btnCorteTotal.setVisibility(View.GONE);
+            Sincro_Totales.setVisibility(View.GONE);
+
+            //Se muestran botones de corte parcial
+            btnCorteParcial.setVisibility(View.VISIBLE);
+            Sincro_Parciales.setVisibility(View.VISIBLE);
         });
 
         btnTotales.setOnClickListener(v -> {
             cargaCortesTotales();
+            //Se muestran botones de corte total
+            btnCorteTotal.setVisibility(View.VISIBLE);
+            Sincro_Totales.setVisibility(View.VISIBLE);
+
+            //Se ocultan botones de corte parcial
+            btnCorteParcial.setVisibility(View.GONE);
+            Sincro_Parciales.setVisibility(View.GONE);
         });
 
         btnVentas.setOnClickListener(v -> {
@@ -227,8 +238,27 @@ public class CortesActivity extends BaseStatusBluetooth {
         });
 
 
-        // Corte Parcial: muestra el ticket generado con los totales acumulados
-        btnCorteParcial.setOnClickListener(v -> realizarCorteParcial());
+
+        //Botones para sincronizar cortes totales y parciales ---------------------------------------------->
+
+
+        //Accion para enviar cortes parciales no enviados
+        Sincro_Parciales.setOnClickListener(v -> {
+            EnviarCortesNoEnviados();
+        });
+
+        //Acción para Enviar cortes totales no enviados
+        Sincro_Totales.setOnClickListener(v -> {
+            SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+            String jsonGuardado = prefs.getString("jsonPendiente", null);
+
+            if (jsonGuardado != null) {
+                reenviarCorteTotal(jsonGuardado);
+            } else {
+                Toast.makeText(this, "No hay corte pendiente por enviar", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
     }
 
@@ -460,6 +490,9 @@ public class CortesActivity extends BaseStatusBluetooth {
                         dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
                         dbHelper.actualizarEstatusBoletos(1);
 
+                        ParcialTextView.setTextColor(Color.RED);
+                        ParcialiconView.setColorFilter(Color.RED);
+
                         SessionManager.getInstance(CortesActivity.this).showSessionExpiredDialog();
 
                         cargaCortesParciales();
@@ -469,6 +502,9 @@ public class CortesActivity extends BaseStatusBluetooth {
                         guardarCorteConError(userPhone, timestamp, ventas, 3);
                         dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
                         dbHelper.actualizarEstatusBoletos(1);
+                        ParcialTextView.setTextColor(Color.RED);
+                        ParcialiconView.setColorFilter(Color.RED);
+
                         cargaCortesParciales();
 
                     }
@@ -480,6 +516,9 @@ public class CortesActivity extends BaseStatusBluetooth {
                     guardarCorteConError(userPhone, timestamp, ventas, 3);
                     dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
                     dbHelper.actualizarEstatusBoletos(1);
+                    ParcialTextView.setTextColor(Color.RED);
+                    ParcialiconView.setColorFilter(Color.RED);
+
                     cargaCortesParciales();
 
                 }
@@ -629,6 +668,8 @@ public class CortesActivity extends BaseStatusBluetooth {
                             Toast.makeText(CortesActivity.this, "Cortes Parciales enviados", Toast.LENGTH_SHORT).show();
                             dbHelper.actualizarEstatusCortesNoEnviados(1);
                             dbHelper.actualizarEstatusCortesParcialesASincronizado(1);
+                            ParcialTextView.setTextColor(getResources().getColor(R.color.colorPrimary));
+                            ParcialiconView.setImageResource(R.drawable.reenvio);
                             cargaCortesParciales();
 
                         } else {
