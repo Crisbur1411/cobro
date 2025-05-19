@@ -48,10 +48,10 @@ public class CortesActivity extends BaseStatusBluetooth {
 
     private LinearLayout Sincro_Totales, Sincro_Parciales;
     private ListView listaTotales;
-    private TextView btnParciales, btnTotales ,btnVentas, ParcialTextView;
+    private TextView btnParciales, btnTotales ,btnVentas, ParcialTextView, totalTextView;
 
-    private String userPhone, identificador;
-    private ImageView calendario, ParcialiconView;
+    private String userPhone, identificador, jsonString;
+    private ImageView calendario, ParcialiconView, totalIconView;
 
     private String fechaSeleccionada = "";
 
@@ -78,7 +78,8 @@ public class CortesActivity extends BaseStatusBluetooth {
         ParcialTextView = findViewById(R.id.sincronizar);
         ParcialiconView = findViewById(R.id.iconView);
 
-
+        totalTextView = findViewById(R.id.sincronizar_totales);
+        totalIconView = findViewById(R.id.iconView_totales);
 
         //Botones mara mostrar los cortes parciales, totales y ventas
         btnParciales = findViewById(R.id.btnCortesParciales);
@@ -121,6 +122,10 @@ public class CortesActivity extends BaseStatusBluetooth {
         cargaCortesParciales();
         mostrarVentas();
 
+
+        colorSincronizacionParciales();
+
+        colorSincronizacionTotales();
 
         //Cambiar color del de letras de sincronizacion de cortes parciales como aviso
         // Obtener cortes
@@ -235,6 +240,12 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         btnVentas.setOnClickListener(v -> {
             mostrarVentas();
+            //Se ocultan botones de corte total
+            btnCorteTotal.setVisibility(View.GONE);
+            Sincro_Totales.setVisibility(View.GONE);
+            //Se ocultan botones de corte parcial
+            btnCorteParcial.setVisibility(View.GONE);
+            Sincro_Parciales.setVisibility(View.GONE);
         });
 
 
@@ -491,7 +502,7 @@ public class CortesActivity extends BaseStatusBluetooth {
                         dbHelper.actualizarEstatusBoletos(1);
 
                         ParcialTextView.setTextColor(Color.RED);
-                        ParcialiconView.setColorFilter(Color.RED);
+                        ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
 
                         SessionManager.getInstance(CortesActivity.this).showSessionExpiredDialog();
 
@@ -503,7 +514,7 @@ public class CortesActivity extends BaseStatusBluetooth {
                         dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
                         dbHelper.actualizarEstatusBoletos(1);
                         ParcialTextView.setTextColor(Color.RED);
-                        ParcialiconView.setColorFilter(Color.RED);
+                        ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
 
                         cargaCortesParciales();
 
@@ -517,7 +528,7 @@ public class CortesActivity extends BaseStatusBluetooth {
                     dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
                     dbHelper.actualizarEstatusBoletos(1);
                     ParcialTextView.setTextColor(Color.RED);
-                    ParcialiconView.setColorFilter(Color.RED);
+                    ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
 
                     cargaCortesParciales();
 
@@ -541,6 +552,32 @@ public class CortesActivity extends BaseStatusBluetooth {
     private int obtenerNumeroCorteParcial() {
         SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
         return prefs.getInt("numeroCorteParcial", 1); // Default a 1 si no existe
+    }
+
+
+
+    private void colorSincronizacionParciales(){
+        List<JSONObject> cortesParcialesNoEnv = dbHelper.CortesParcialesNoEnviados();
+
+
+        if (cortesParcialesNoEnv.isEmpty()){
+            ParcialTextView.setTextColor(getResources().getColor(R.color.colorPrimary));
+            ParcialiconView.setImageResource(R.drawable.reenvio);
+        } else {
+            ParcialTextView.setTextColor(Color.RED);
+            ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
+        }
+
+    }
+
+    private void colorSincronizacionTotales(){
+        if (jsonString == null || jsonString.trim().isEmpty()){
+            totalTextView.setTextColor(getResources().getColor(R.color.colorPrimary));
+            totalIconView.setImageResource(R.drawable.reenvio);
+        } else {
+            totalTextView.setTextColor(Color.RED);
+            totalIconView.setImageResource(R.drawable.sincronizacion_necesaria);
+        }
     }
 
 
@@ -668,8 +705,8 @@ public class CortesActivity extends BaseStatusBluetooth {
                             Toast.makeText(CortesActivity.this, "Cortes Parciales enviados", Toast.LENGTH_SHORT).show();
                             dbHelper.actualizarEstatusCortesNoEnviados(1);
                             dbHelper.actualizarEstatusCortesParcialesASincronizado(1);
-                            ParcialTextView.setTextColor(getResources().getColor(R.color.colorPrimary));
-                            ParcialiconView.setImageResource(R.drawable.reenvio);
+                            colorSincronizacionParciales();
+
                             cargaCortesParciales();
 
                         } else {
@@ -809,6 +846,8 @@ public class CortesActivity extends BaseStatusBluetooth {
 
                             } else {
                                 Toast.makeText(CortesActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
+                                totalTextView.setTextColor(Color.RED);
+                                totalIconView.setImageResource(R.drawable.sincronizacion_necesaria);
                             }
                         }
 
@@ -821,6 +860,8 @@ public class CortesActivity extends BaseStatusBluetooth {
                             dbHelper.actualizarEstatusDetalleCorte(2);
                             dbHelper.actualizarEstatusCortesParcialesAEnviados(2);
 
+                            totalTextView.setTextColor(Color.RED);
+                            totalIconView.setImageResource(R.drawable.sincronizacion_necesaria);
 
                             SharedPreferences.Editor editor = getSharedPreferences("AppPrefs", MODE_PRIVATE).edit();
                             editor.putString("jsonPendiente", finalReportJson.toString());
@@ -831,6 +872,8 @@ public class CortesActivity extends BaseStatusBluetooth {
                     });
                 } else {
                     Toast.makeText(CortesActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
+                    totalTextView.setTextColor(Color.RED);
+                    totalIconView.setImageResource(R.drawable.sincronizacion_necesaria);
                 }
 
             } catch (JSONException e) {
@@ -879,7 +922,7 @@ public class CortesActivity extends BaseStatusBluetooth {
                                         Toast.makeText(CortesActivity.this, "Reenvío exitoso", Toast.LENGTH_SHORT).show();
 
                                         dbHelper.actualizarEstatusCorteTotalNoEnviado(2);   //
-
+                                        colorSincronizacionTotales();
                                         cargaCortesTotales();
 
                                         // Borrar JSON guardado
