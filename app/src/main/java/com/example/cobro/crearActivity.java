@@ -3,6 +3,7 @@ package com.example.cobro;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -40,10 +41,12 @@ public class crearActivity extends AppCompatActivity {
         passwordInput = findViewById(R.id.passwordInput);
         identificadorInput = findViewById(R.id.identificadorInput);
         btnCrear = findViewById(R.id.butto);
-        btnBorrar = findViewById(R.id.borrarDatos);
+        //btnBorrar = findViewById(R.id.borrarDatos);
 
         // Instanciar base de datos local
         dbHelper = new DatabaseHelper(this);
+
+        /*
 
         // Acción al presionar "Borrar datos"
         btnBorrar.setOnClickListener(new View.OnClickListener() {
@@ -56,6 +59,8 @@ public class crearActivity extends AppCompatActivity {
                 Toast.makeText(crearActivity.this, "Usuarios eliminados de la base de datos local", Toast.LENGTH_SHORT).show();
             }
         });
+
+         */
 
         // Acción al presionar "Crear usuario"
         btnCrear.setOnClickListener(new View.OnClickListener() {
@@ -79,6 +84,12 @@ public class crearActivity extends AppCompatActivity {
         // Validar que no haya campos vacíos
         if (usuario.isEmpty() || contraseña.isEmpty() || identificador.isEmpty()) {
             Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Validar que usuario sea un correo electrónico válido
+        if (!Patterns.EMAIL_ADDRESS.matcher(usuario).matches()) {
+            Toast.makeText(this, "Introduce un correo electrónico válido", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -110,31 +121,23 @@ public class crearActivity extends AppCompatActivity {
                         }
                     }
 
-                    // Si no existe, se muestra mensaje
                     if (!encontrado) {
                         Toast.makeText(crearActivity.this, "Identificador no valido", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    // Si está bloqueado, se muestra mensaje
                     if (!activo) {
                         Toast.makeText(crearActivity.this, "Error al registrar, Dispositivo bloqueado", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    // Si usuario coincide con el del API
                     if (userFromApi.equals(usuario)) {
-                        // Guardar usuario en SQLite
                         boolean insertado = dbHelper.insertarUsuario(usuario, contraseña, identificadorIngresado, userPhone);
                         if (insertado) {
                             Toast.makeText(crearActivity.this, "Usuario registrado con éxito", Toast.LENGTH_SHORT).show();
-
-                            // Limpiar inputs
                             usuarioInput.setText("");
                             passwordInput.setText("");
                             identificadorInput.setText("");
-
-                            // Ir a MainActivity
                             Intent intent = new Intent(crearActivity.this, MainActivity.class);
                             startActivity(intent);
                             finish();
@@ -142,20 +145,20 @@ public class crearActivity extends AppCompatActivity {
                             Toast.makeText(crearActivity.this, "Error: El usuario ya existe", Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(crearActivity.this, "El usuario no coincide con los datos del servidor", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(crearActivity.this, "Para poder realizar el registro debe haber un registro previo en el servidor", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(crearActivity.this, "Usuario o contraseña inválidos en servidor", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(crearActivity.this, "Para poder realizar el registro debe haber un registro previo en el servidor", Toast.LENGTH_SHORT).show();
                 }
             }
 
-            // Si falla la petición al servidor
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
                 Toast.makeText(crearActivity.this, "Error de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
+
 
     // Reproduce sonido de click al presionar botones
     private void reproducirSonidoClick() {

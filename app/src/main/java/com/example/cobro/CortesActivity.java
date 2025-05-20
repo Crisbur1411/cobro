@@ -42,7 +42,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
     private control_cortes dbHelper;
     private MediaPlayer sonidoClick;
-    private Button btnCorteParcial, btnCorteTotal;
+    private Button btnCorteParcial, btnCorteTotal, BorraCortes;
 
 
 
@@ -85,6 +85,8 @@ public class CortesActivity extends BaseStatusBluetooth {
         btnParciales = findViewById(R.id.btnCortesParciales);
         btnTotales = findViewById(R.id.btnCortesTotales);
         btnVentas = findViewById(R.id.btnVentas);
+
+        //BorraCortes = findViewById(R.id.btnBorrarCortes);
 
         //Se declara el calendario para el filtro
         calendario = findViewById(R.id.calendario);
@@ -140,6 +142,15 @@ public class CortesActivity extends BaseStatusBluetooth {
             ParcialiconView.setColorFilter(Color.RED);
         }
 
+        /*
+        BorraCortes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.borrarCortes();
+            }
+        });
+
+         */
 
         //Obtener identificador de dispoistivo y telefono desde la base de datos local
         //Se obtiene el id almacenado en sharedPreferences

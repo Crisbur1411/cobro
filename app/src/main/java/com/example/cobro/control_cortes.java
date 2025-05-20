@@ -23,7 +23,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 16; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
+    private static final int DATABASE_VERSION = 17; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
 
     //Creacion de tabla donde se almacenan los cortes parciales con la informacion de ventas
     private static final String TABLE_CREATE =
@@ -669,14 +669,10 @@ public class control_cortes extends SQLiteOpenHelper {
         return existenPendientes;
     }
 
-    /**
+    /*
      * Borra todos los registros de la tabla 'cortes'.
 
-     public void borrarCortes() {
-     SQLiteDatabase db = this.getWritableDatabase();
-     db.execSQL("DELETE FROM cortes");
-     db.close();
-     }
+
 
      // Metodo para borrar los detalles de cortes
      public void borrarDetallesCortes() {
@@ -685,5 +681,9 @@ public class control_cortes extends SQLiteOpenHelper {
      db.close();
      }
      */
-
+    public void borrarCortes() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM cortes");
+        db.close();
+    }
 }

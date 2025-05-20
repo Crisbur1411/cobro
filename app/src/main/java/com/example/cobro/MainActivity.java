@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnIngresar;
     private DatabaseHelper dbHelper;  // Se crea una instancia de la base de datos
     private MediaPlayer sonidoClick; // Objeto para reproducir sonido al hacer click
-
+    private TextView nota;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         etUsuario = findViewById(R.id.textInputEditTextUsuario);
         etPassword = findViewById(R.id.textInputEditTextPassword);
         btnIngresar = findViewById(R.id.button);
+        nota = findViewById(R.id.textViewNota);
         dbHelper = new DatabaseHelper(this); // Se inicializa la base de datos local
 
         // Se configura el TextView que permitirá crear una cuenta nueva
@@ -131,6 +132,12 @@ public class MainActivity extends AppCompatActivity {
                 public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                     progressDialog.dismiss(); // Cierra el diálogo de carga
 
+                    // Valida que el usuario tenga formato de correo electrónico
+                    if (!usuario.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                        Toast.makeText(MainActivity.this, "El usuario debe ser un correo electrónico válido", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
                     // Si la respuesta es exitosa y contiene datos
                     if (response.isSuccessful() && response.body() != null) {
                         // Se extraen los datos necesarios de la respuesta
@@ -164,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
                     }
                 }
+
 
                 @Override
                 public void onFailure(Call<LoginResponse> call, Throwable t) {

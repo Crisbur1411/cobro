@@ -151,15 +151,22 @@
             android:textColor="@color/black" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <Button
-        android:id="@+id/borrarDatos"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/textViewNota"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="34dp"
-        android:layout_marginTop="123dp"
-        android:text="Borrar"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:text="Nota: El usuario debe estar registrado previamente con el servidor para poder ser registrado de manera local."
+        android:textAlignment="center"
+        android:textColor="@android:color/holo_red_dark"
+        android:textSize="14sp"
+        android:textStyle="italic"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/butto"/>
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
