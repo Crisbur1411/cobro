@@ -104,16 +104,43 @@ public class Bluetooth extends AppCompatActivity {
         devicesArrayAdapter.clear();
         pairedDevicesList.clear();
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
-            Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-            for (BluetoothDevice device : pairedDevices) {
-                devicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                pairedDevicesList.add(device);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                listarDispositivos();
+            } else {
+                Toast.makeText(this, "Permiso de Bluetooth requerido.", Toast.LENGTH_SHORT).show();
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                listarDispositivos();
+            } else {
+                Toast.makeText(this, "Permiso de ubicación requerido.", Toast.LENGTH_SHORT).show();
             }
         } else {
-            Toast.makeText(this, "Permisos de Bluetooth requeridos.", Toast.LENGTH_SHORT).show();
+            listarDispositivos(); // No se requieren permisos en tiempo de ejecución para API < 23
         }
     }
+
+    private void listarDispositivos() {
+        // Android 12+ requiere BLUETOOTH_CONNECT
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permiso de Bluetooth requerido.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        // Ahora sí, seguro llamar a getBondedDevices()
+        Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
+
+        for (BluetoothDevice device : pairedDevices) {
+            devicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+            pairedDevicesList.add(device);
+        }
+    }
+
+
 
     //Metodo para cerrar sesión con el menu inferior
     private void cerrarSesion() {
@@ -141,25 +168,23 @@ public class Bluetooth extends AppCompatActivity {
     // Conectar al dispositivo seleccionado
     private void connectToDevice(BluetoothDevice device) {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Sin permiso para conectar Bluetooth.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
             bluetoothSocket = device.createRfcommSocketToServiceRecord(uuid);
-            bluetoothSocket.connect(); // Establecer conexión
+            bluetoothSocket.connect();
 
             outputStream = bluetoothSocket.getOutputStream();
-
-            // Inicializar la impresora o dispositivo después de la conexión
             initializePrinter();
 
             Toast.makeText(this, "Conexión exitosa con: " + device.getName(), Toast.LENGTH_SHORT).show();
 
-            // Enviar al usuario a la siguiente pantalla
             Intent intent = new Intent(Bluetooth.this, CobroActivity.class);
-            intent.putExtra("deviceName", device.getName()); // Pasar nombre del dispositivo
-            intent.putExtra("deviceAddress", device.getAddress()); // Pasar dirección del dispositivo
+            intent.putExtra("deviceName", device.getName());
+            intent.putExtra("deviceAddress", device.getAddress());
             startActivity(intent);
 
         } catch (IOException e) {
@@ -167,6 +192,7 @@ public class Bluetooth extends AppCompatActivity {
             Toast.makeText(this, "Error al conectar: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
+
 
     // Inicializar la impresora o el dispositivo Bluetooth
     private void initializePrinter() {
@@ -193,25 +219,25 @@ public class Bluetooth extends AppCompatActivity {
 
     // Solicitar permisos necesarios para Bluetooth
     private void requestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12+
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
-                    || ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED
-                    || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    || ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
 
                 ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission.BLUETOOTH_CONNECT,
-                        Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.ACCESS_FINE_LOCATION
+                        Manifest.permission.BLUETOOTH_SCAN
                 }, REQUEST_ENABLE_BT);
             }
-        } else {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { // Android 6.0 a 11
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission.ACCESS_FINE_LOCATION
                 }, REQUEST_ENABLE_BT);
             }
-        }
+        } // Si es menor a M (API < 23), no se requieren permisos en tiempo de ejecución
     }
+
+
 
     // Manejar permisos solicitados
     @Override
