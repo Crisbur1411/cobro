@@ -54,26 +54,20 @@
         android:orientation="vertical"
         app:layout_constraintGuide_begin="379dp" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputLayoutUsuario"
-        android:layout_width="350dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        app:layout_constraintBottom_toTopOf="@+id/textInputLayout3"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/textView5"
-        app:layout_constraintVertical_bias="0.169">
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/textInputEditTextUsuario"
-            android:layout_width="match_parent"
-            android:inputType="text"
-            android:layout_height="51dp"
-            android:textColor="@color/black"
-            android:hint="@string/txt_usuario" />
-    </com.google.android.material.textfield.TextInputLayout>
+    <EditText
+        android:id="@+id/textInputEditTextUsuario"
+        android:layout_width="350dp"
+        android:layout_height="51dp"
+        android:layout_marginTop="268dp"
+        android:backgroundTint="@color/black"
+        android:hint="@string/txt_usuario"
+        android:inputType="text"
+        android:textColor="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.426"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textView3"
@@ -89,27 +83,21 @@
         app:layout_constraintStart_toStartOf="@+id/guideline"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/textInputLayout3"
+
+    <EditText
+        android:id="@+id/textInputEditTextPassword"
         android:layout_width="350dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
-        app:passwordToggleEnabled="true"
-        app:passwordToggleTint="@color/black"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toTopOf="@+id/textView3">
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/textInputEditTextPassword"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/txt_password"
-            android:inputType="textPassword"
-            android:textColor="@color/black" />
-    </com.google.android.material.textfield.TextInputLayout>
-
+        android:layout_height="51dp"
+        android:layout_marginTop="392dp"
+        android:backgroundTint="@color/black"
+        android:hint="@string/txt_password"
+        android:inputType="textPassword"
+        android:singleLine="true"
+        android:textColor="@color/black"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.426"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/button"
@@ -164,6 +152,8 @@
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

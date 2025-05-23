@@ -3,8 +3,8 @@
 
     <!-- LOGIN    -->
     <string name="titulo_login"> Ingresar sesion</string>
-    <string name="lbl_usuario"> Usuario</string>
-    <string name="txt_usuario"> Ingresar usuario</string>
+    <string name="lbl_usuario"> Usuario </string>
+    <string name="txt_usuario"> Correo electronico o telefono</string>
     <string name="lbl_password"> Contraseña</string>
     <string name="txt_password"> Ingresar contraseña</string>
     <string name="btn_ingresar"> Ingresar</string>
