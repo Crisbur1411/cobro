@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 import com.google.android.material.textfield.TextInputEditText;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,7 +18,7 @@ import retrofit2.Response;
 public class crearActivity extends AppCompatActivity {
 
     // Inputs de usuario, password e identificador desde el XML
-    TextInputEditText usuarioInput, passwordInput, identificadorInput;
+    EditText usuarioInput, passwordInput, identificadorInput;
 
     // Botones para crear y borrar usuarios
     Button btnCrear, btnBorrar;
