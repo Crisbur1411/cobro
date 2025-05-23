@@ -4,7 +4,7 @@
 
 
     <!-- Fondo opcional -->
-    <solid android:color="#81bde5" /> <!-- Cambia si necesitas fondo -->
+    <solid android:color="#1CA4FF" /> <!-- Cambia si necesitas fondo -->
 
     <!-- Esquinas redondeadas opcionales -->
     <corners android:radius="10dp" />
