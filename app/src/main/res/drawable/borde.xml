@@ -7,5 +7,5 @@
     <solid android:color="#f1f8de" /> <!-- Cambia si necesitas fondo -->
 
     <!-- Esquinas redondeadas opcionales -->
-    <corners android:radius="20dp" />
+    <corners android:radius="5dp" />
 </shape>
