@@ -135,7 +135,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         // Cambiar color según si hay cortes
         if (cortesParcialesNoEnv.isEmpty()) {
-            ParcialTextView.setTextColor(getResources().getColor(R.color.colorPrimary));
+            ParcialTextView.setTextColor(getResources().getColor(R.color.black));
             ParcialiconView.setImageResource(R.drawable.reenvio);
         } else {
             ParcialTextView.setTextColor(Color.RED);
@@ -286,9 +286,9 @@ public class CortesActivity extends BaseStatusBluetooth {
 
 
     private void mostrarVentas() {
-        btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-        btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-        btnVentas.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+        btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+        btnVentas.setTextColor(ContextCompat.getColor(this, R.color.colorcortes));
 
         List<CorteTotal> ventas;
 
@@ -310,9 +310,9 @@ public class CortesActivity extends BaseStatusBluetooth {
 
 
     private void cargaCortesParciales() {
-        btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
-        btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-        btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+        btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorcortes));
+        btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+        btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.white));
 
         List<CorteTotal> cortes;
 
@@ -329,9 +329,9 @@ public class CortesActivity extends BaseStatusBluetooth {
 
 
     private void cargaCortesTotales() {
-        btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
-        btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-        btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
+        btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorcortes));
+        btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.white));
+        btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.white));
 
         List<CorteTotal> cortes;
 
@@ -572,7 +572,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
 
         if (cortesParcialesNoEnv.isEmpty()){
-            ParcialTextView.setTextColor(getResources().getColor(R.color.colorPrimary));
+            ParcialTextView.setTextColor(getResources().getColor(R.color.black));
             ParcialiconView.setImageResource(R.drawable.reenvio);
         } else {
             ParcialTextView.setTextColor(Color.RED);
@@ -583,7 +583,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
     private void colorSincronizacionTotales(){
         if (jsonString == null || jsonString.trim().isEmpty()){
-            totalTextView.setTextColor(getResources().getColor(R.color.colorPrimary));
+            totalTextView.setTextColor(getResources().getColor(R.color.black));
             totalIconView.setImageResource(R.drawable.reenvio);
         } else {
             totalTextView.setTextColor(Color.RED);

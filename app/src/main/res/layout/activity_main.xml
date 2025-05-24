@@ -101,17 +101,17 @@
 
     <Button
         android:id="@+id/button"
-        android:layout_width="340dp"
-        android:layout_height="wrap_content"
+        android:layout_width="345dp"
+        android:layout_height="40dp"
         android:layout_marginBottom="172dp"
-        android:drawableEnd="@drawable/icono_btn_login"
+        android:background="#124E91"
+
         android:elevation="10dp"
         android:paddingStart="40sp"
-        
         android:text="@string/btn_ingresar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintHorizontal_bias="0.476"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/guideline" />
 
     <TextView

@@ -3,8 +3,10 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="colorPrimary">#328E6E</color>
+    <color name="colorPrimary">#124E91</color>
     <color name="colorPrimaryDark">#1A5276</color>
+    <color name="colorcortes">#FFFFFFFF</color>
+
 
 
     <color name="greenButton">#4CAF50</color> <!-- Verde accesible -->
