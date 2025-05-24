@@ -2,18 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_inicio"
-        android:icon="@drawable/baseline_house_24"
-        android:title="Inicio" />
+        android:icon="@drawable/house"
+        android:title="" />
     <item
         android:id="@+id/nav_cortes"
-        android:icon="@drawable/cortes"
-        android:title="Cortes" />
+        android:icon="@drawable/c"
+        android:title="" />
     <item
         android:id="@+id/nav_conexion"
-        android:icon="@drawable/conexion"
-        android:title="Conectar" />
+        android:icon="@drawable/impresion"
+        android:title="" />
     <item
         android:id="@+id/nav_cerrarSesion"
-        android:icon="@drawable/salir"
-        android:title="Cerrar Sesión" />
+        android:icon="@drawable/salida"
+        android:title="" />
 </menu>

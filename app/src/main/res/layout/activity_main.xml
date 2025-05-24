@@ -101,12 +101,13 @@
 
     <Button
         android:id="@+id/button"
-        android:layout_width="300dp"
+        android:layout_width="340dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="172dp"
         android:drawableEnd="@drawable/icono_btn_login"
         android:elevation="10dp"
         android:paddingStart="40sp"
+        
         android:text="@string/btn_ingresar"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
