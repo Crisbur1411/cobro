@@ -288,7 +288,7 @@ public class CortesActivity extends BaseStatusBluetooth {
     private void mostrarVentas() {
         btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
         btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
-        btnVentas.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        btnVentas.setTextColor(ContextCompat.getColor(this, R.color.white));
 
         List<CorteTotal> ventas;
 
@@ -310,7 +310,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
 
     private void cargaCortesParciales() {
-        btnParciales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        btnParciales.setTextColor(ContextCompat.getColor(this, R.color.white));
         btnTotales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
         btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 
@@ -329,7 +329,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
 
     private void cargaCortesTotales() {
-        btnTotales.setTextColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        btnTotales.setTextColor(ContextCompat.getColor(this, R.color.white));
         btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
         btnVentas.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
 

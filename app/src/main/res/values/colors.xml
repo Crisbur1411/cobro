@@ -20,6 +20,7 @@
     <color name="purple_500">#6200EE</color> <!-- Color normal del botón -->
     <color name="purple_700">#3700B3</color> <!-- Color al presionar -->
     <color name="fondo_cajon">#fcfff2</color> <!-- Color para fondos de datos -->
-
+    <color name="fondo_menu">#9ca1a8</color>
+    9ca1a8
 
 </resources>

@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
@@ -10,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="?android:attr/windowBackground"
+        android:background="@color/fondo_menu"
         app:itemIconTint="@color/selector_nav_color"
         app:itemTextColor="@color/selector_nav_color"
         app:labelVisibilityMode="labeled"
@@ -24,11 +25,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="412dp"
-        android:background="@drawable/borde"
+        android:background="@drawable/borde_tabla"
         android:orientation="horizontal"
         android:padding="6dp"
         app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnCorteTotal"
+        app:layout_constraintVertical_bias="1.0">
 
 
         <TextView
@@ -41,7 +44,7 @@
             android:padding="8dp"
             android:text="Ventas"
             android:textAlignment="center"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -79,8 +82,7 @@
         android:id="@+id/Sincro_Totales"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="44dp"
-        android:layout_marginEnd="4dp"
+        android:layout_marginTop="95dp"
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
@@ -88,6 +90,8 @@
         android:orientation="horizontal"
         android:padding="4dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.97"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -112,8 +116,7 @@
         android:id="@+id/textViewWithIcon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="44dp"
-        android:layout_marginEnd="4dp"
+        android:layout_marginTop="95dp"
         android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true"
@@ -121,6 +124,8 @@
         android:orientation="horizontal"
         android:padding="4dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.97"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -146,11 +151,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginStart="10dp"
         android:layout_marginTop="13dp"
         android:text="Estado"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -158,12 +164,13 @@
         android:id="@+id/btnCorteTotal"
         android:layout_width="120dp"
         android:layout_height="50dp"
-        android:layout_marginTop="104dp"
-        android:layout_marginEnd="28dp"
+        android:layout_marginTop="95dp"
         android:background="@drawable/button_border"
         android:text="@string/btn_total"
         android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.03"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ListView
@@ -178,22 +185,24 @@
         android:id="@+id/btnCorteParcial"
         android:layout_width="125dp"
         android:layout_height="50dp"
-        android:layout_marginTop="104dp"
-        android:layout_marginEnd="28dp"
+        android:layout_marginTop="95dp"
         android:background="@drawable/button_border"
         android:text="@string/btn_parcial"
         android:textSize="12dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.03"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/calendario"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="13dp"
         android:contentDescription="Filtrar por fecha"
         android:src="@drawable/calendario1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.9"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
