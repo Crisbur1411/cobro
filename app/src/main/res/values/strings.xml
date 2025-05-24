@@ -9,6 +9,7 @@
     <string name="txt_password"> Ingresar contraseña</string>
     <string name="btn_ingresar"> Ingresar</string>
     <string name="lbl_crear_cuenta"> Crear Cuenta</string>
+    <string name="txt_identificador"> Ingresar tu identificador</string>
 
     <!-- COBRO-->
     <string name="btn_Normal"> Pasaje Normal</string>

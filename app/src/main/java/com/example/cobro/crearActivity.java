@@ -1,6 +1,7 @@
 // Actividad para crear un nuevo usuario, Utiliza la base de datos DatabaseHelper
 package com.example.cobro;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Patterns;
@@ -13,11 +14,15 @@ import android.media.MediaPlayer;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
+import android.widget.EditText;
+
 
 public class crearActivity extends AppCompatActivity {
 
     // Inputs de usuario, password e identificador desde el XML
-    TextInputEditText usuarioInput, passwordInput, identificadorInput;
+    EditText usuarioInput, passwordInput, identificadorInput;
+
+
 
     // Botones para crear y borrar usuarios
     Button btnCrear, btnBorrar;
@@ -28,6 +33,7 @@ public class crearActivity extends AppCompatActivity {
     // Sonido que se reproduce al presionar botones
     private MediaPlayer sonidoClick;
 
+    @SuppressLint("WrongViewCast")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
