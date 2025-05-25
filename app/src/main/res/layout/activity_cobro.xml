@@ -159,7 +159,7 @@
             android:lineSpacingExtra="6dp"
             android:text="Última Transacción"
             android:textColor="@android:color/black"
-            android:textSize="10sp"
+            android:textSize="12sp"
             android:textStyle="bold" />
 
     </LinearLayout>

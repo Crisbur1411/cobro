@@ -72,8 +72,9 @@ public class Bluetooth extends AppCompatActivity {
 
         ListView devicesListView = findViewById(R.id.devices_list_view);
 //Arreglo para mostrar los dispositivos
-        devicesArrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+        devicesArrayAdapter = new ArrayAdapter<>(this, R.layout.list_item_device, R.id.tvDeviceName);
         devicesListView.setAdapter(devicesArrayAdapter);
+
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
