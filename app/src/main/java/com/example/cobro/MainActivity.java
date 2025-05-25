@@ -116,7 +116,26 @@ public class MainActivity extends AppCompatActivity {
 
         // Si existe conexión a internet, se valida contra el API
         if (hayConexionInternet()) {
-            // Muestra un diálogo de carga
+            // Primero verificar que exista el usuario localmente
+            DatabaseHelper dbHelper = new DatabaseHelper(MainActivity.this);
+            boolean emailValido = dbHelper.verificarEmail(usuario);
+
+            if (!emailValido) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Registro local requerido")
+                        .setMessage("Este usuario no está registrado localmente. Debes registrarte primero.")
+                        .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                        .show();
+                return;
+            }
+
+            boolean credencialesValidas = dbHelper.verificarUsuario(usuario, password);
+            if (!credencialesValidas) {
+                Toast.makeText(MainActivity.this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Si existe localmente, ahora sí hacer login contra el API
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Cargando...")
                     .setMessage("Verificando credenciales")
@@ -125,31 +144,24 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog progressDialog = builder.create();
             progressDialog.show();
 
-            // Se construye la petición al API
             LoginRequest request = new LoginRequest(usuario, password);
             ApiClient.getApiService().login(request).enqueue(new retrofit2.Callback<LoginResponse>() {
                 @Override
                 public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                    progressDialog.dismiss(); // Cierra el diálogo de carga
+                    progressDialog.dismiss();
 
-                    // Valida que el usuario tenga formato de correo electrónico
                     if (!usuario.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
                         Toast.makeText(MainActivity.this, "El usuario debe ser un correo electrónico válido", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    // Si la respuesta es exitosa y contiene datos
                     if (response.isSuccessful() && response.body() != null) {
-                        // Se extraen los datos necesarios de la respuesta
                         String token = response.body().getData().getAccessToken();
                         String phone = response.body().getData().getUser().getPhone();
                         String usuarioApi = usuario;
 
-                        // Obtiene el ID local del usuario desde la base SQLite
-                        DatabaseHelper dbHelper = new DatabaseHelper(MainActivity.this);
                         int userIdLocal = dbHelper.obtenerIdUsuarioPorEmail(usuarioApi);
 
-                        // Guarda los datos en SharedPreferences para su uso posterior
                         SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putString("userUsuario", usuario);
@@ -159,24 +171,18 @@ public class MainActivity extends AppCompatActivity {
                         editor.putInt("userIdLocal", userIdLocal);
                         editor.apply();
 
-                        // Notifica al usuario del éxito
                         Toast.makeText(MainActivity.this, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show();
 
-                        // Redirige a la pantalla de Bluetooth
                         Intent intent = new Intent(MainActivity.this, Bluetooth.class);
                         startActivity(intent);
-                    }
-                    else {
-                        // Si las credenciales son incorrectas en el API
+                    } else {
                         Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show();
                     }
                 }
 
-
                 @Override
                 public void onFailure(Call<LoginResponse> call, Throwable t) {
-                    progressDialog.dismiss(); // Cierra el diálogo de carga
-                    // Notifica al usuario sobre un error de red
+                    progressDialog.dismiss();
                     Toast.makeText(MainActivity.this, "Error de red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
@@ -187,13 +193,10 @@ public class MainActivity extends AppCompatActivity {
             boolean usuarioValido = dbHelper.verificarUsuario(usuario, password);
 
             if (usuarioValido) {
-                // Obtiene el ID local del usuario
                 int userIdLocal = dbHelper.obtenerIdUsuarioPorEmail(usuario);
 
-                // Notifica al usuario de inicio de sesión exitoso en modo local
                 Toast.makeText(MainActivity.this, "Inicio de sesión local exitoso", Toast.LENGTH_SHORT).show();
 
-                // Guarda datos de sesión localmente
                 SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("userUsuario", usuario);
@@ -201,14 +204,13 @@ public class MainActivity extends AppCompatActivity {
                 editor.putInt("userIdLocal", userIdLocal);
                 editor.apply();
 
-                // Redirige a la actividad Bluetooth
                 Intent intent = new Intent(MainActivity.this, Bluetooth.class);
                 startActivity(intent);
             } else {
-                // Si las credenciales locales no son válidas
                 Toast.makeText(MainActivity.this, "Credenciales incorrectas (sin conexión)", Toast.LENGTH_SHORT).show();
             }
         }
+
     }
 
     /**

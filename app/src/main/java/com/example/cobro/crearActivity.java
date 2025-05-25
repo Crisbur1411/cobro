@@ -42,12 +42,12 @@ public class crearActivity extends AppCompatActivity {
         passwordInput = findViewById(R.id.passwordInput);
         identificadorInput = findViewById(R.id.identificadorInput);
         btnCrear = findViewById(R.id.butto);
-        //btnBorrar = findViewById(R.id.borrarDatos);
+        btnBorrar = findViewById(R.id.borrarDatos);
 
         // Instanciar base de datos local
         dbHelper = new DatabaseHelper(this);
 
-        /*
+
 
         // Acción al presionar "Borrar datos"
         btnBorrar.setOnClickListener(new View.OnClickListener() {
@@ -61,7 +61,7 @@ public class crearActivity extends AppCompatActivity {
             }
         });
 
-         */
+
 
         // Acción al presionar "Crear usuario"
         btnCrear.setOnClickListener(new View.OnClickListener() {

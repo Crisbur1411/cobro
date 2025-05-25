@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "usuarios.db";
-    private static final int DATABASE_VERSION = 7; // La version debe actualizarse con cada cambio realizado a la base de datos
+    private static final int DATABASE_VERSION = 8; // La version debe actualizarse con cada cambio realizado a la base de datos
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -59,6 +59,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return existe;
     }
+
+    public boolean verificarEmail(String usuario) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM usuarios WHERE usuario=?", new String[]{usuario});
+        boolean existe = cursor.getCount() > 0;
+        cursor.close();
+        db.close();
+        return existe;
+    }
+
 
     // Metodo para borrar los detalles de cortes
     public void borrarUsuarios() {
