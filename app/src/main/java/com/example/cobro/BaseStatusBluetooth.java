@@ -3,9 +3,11 @@
 package com.example.cobro;
 
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Icon;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.Manifest;
 
@@ -21,6 +23,7 @@ public abstract class BaseStatusBluetooth extends AppCompatActivity {
     private Runnable checkConnectionRunnable;
 
     protected TextView tvEstadoConexion;
+    protected ImageView imgEstadoConexion;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,17 +62,20 @@ public abstract class BaseStatusBluetooth extends AppCompatActivity {
 
 
      //Actualiza el estado de la conexión Bluetooth en pantalla
-    protected void actualizarEstadoConexion() {
-        if (tvEstadoConexion != null) {
-            if (isBluetoothConnected()) {
-                tvEstadoConexion.setText("✅ Conectado");
-                tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-            } else {
-                tvEstadoConexion.setText("⚠️ Desconectado");
-                tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-            }
-        }
-    }
+     protected void actualizarEstadoConexion() {
+         if (tvEstadoConexion != null && imgEstadoConexion != null) {
+             if (isBluetoothConnected()) {
+                 tvEstadoConexion.setText("Conectado");
+                 tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+                 imgEstadoConexion.setImageResource(R.drawable.print_conected); // Usa el icono verde que tengas
+             } else {
+                 tvEstadoConexion.setText("Desconectado");
+                 tvEstadoConexion.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                 imgEstadoConexion.setImageResource(R.drawable.printer_desconected); // Usa el icono rojo que tengas
+             }
+         }
+     }
+
 
     @Override
     protected void onResume() {

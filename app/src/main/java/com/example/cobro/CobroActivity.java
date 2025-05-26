@@ -75,6 +75,8 @@ public class CobroActivity extends BaseStatusBluetooth {
         tvUltimaTransaccion = findViewById(R.id.tvUltimaTransaccion);
         // Inicializar el TextView del estado de conexión
         tvEstadoConexion = findViewById(R.id.tvEstadoConexion);
+        imgEstadoConexion = findViewById(R.id.imgEstadoConexion);
+
 
         // Inicializar sonido al cargar la actividad
         sonidoClick = MediaPlayer.create(this, R.raw.click);

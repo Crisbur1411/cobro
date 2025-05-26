@@ -69,6 +69,7 @@ public class CortesActivity extends BaseStatusBluetooth {
         sonidoClick = MediaPlayer.create(this, R.raw.click);
         //Texto de conexión
         tvEstadoConexion = findViewById(R.id.tvEstadoConexion);
+        imgEstadoConexion = findViewById(R.id.imgEstadoConexion);
         //Boton de corte total
         btnCorteTotal = findViewById(R.id.btnCorteTotal);
         //Boton de corte parcial
