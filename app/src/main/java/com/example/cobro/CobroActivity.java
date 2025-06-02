@@ -29,9 +29,11 @@ public class CobroActivity extends BaseStatusBluetooth {
     private LinearLayout btnPasajeNormal, btnEstudiante, btnTerceraEdad; //Botones para generar tickets
 
     // Precios fijos
-    private static final int PRECIO_NORMAL = 18; //Precio fijo para pasaje normal
-    private static final int PRECIO_ESTUDIANTE = 12; //Precio fijo para pasaje de estudiante
-    private static final int PRECIO_TERCERA_EDAD = 5; //Precio fijo para pasaje de tercera edad
+
+    private int precioNormal;
+    private int precioEstudiante;
+    private int precioTerceraEdad;
+
 
     private control_cortes dbHelper; // Instancia de la clase que maneja la BD para cortes parciales
 
@@ -109,6 +111,67 @@ public class CobroActivity extends BaseStatusBluetooth {
 
         tvNumero.setText(String.valueOf(contador));
 
+
+        precioNormal = 18;
+        precioEstudiante = 12;
+        precioTerceraEdad = 5;
+
+        TextView precioNormalTextView = findViewById(R.id.precioNormal);
+        Button btnMasNormal = findViewById(R.id.btnMasNormal);
+        Button btnMenosNormal = findViewById(R.id.btnMenosNormal);
+
+
+        TextView precioEstudianteTextView = findViewById(R.id.precioEstudiante);
+        Button btnMasEstudiante = findViewById(R.id.btnMasEstudiante);
+        Button btnMenosEstudiante = findViewById(R.id.btnMenosEstudiante);
+
+        TextView precioTerceraEdadTextView = findViewById(R.id.precioTerceraEdad);
+        Button btnMasTerceraEdad = findViewById(R.id.btnMasTerceraEdad);
+        Button btnMenosTerceraEdad = findViewById(R.id.btnMenosTerceraEdad);
+
+
+
+
+
+        btnMasNormal.setOnClickListener(v -> {
+            precioNormal++;
+            precioNormalTextView.setText("$" + precioNormal + ".00");
+        });
+
+        btnMenosNormal.setOnClickListener(v -> {
+            if (precioNormal > 0) {
+                precioNormal--;
+                precioNormalTextView.setText("$" + precioNormal + ".00");
+            }
+        });
+
+
+        btnMasEstudiante.setOnClickListener(v -> {
+            precioEstudiante++;
+            precioEstudianteTextView.setText("$" + precioEstudiante + ".00");
+        });
+
+        btnMenosEstudiante.setOnClickListener(v -> {
+            if (precioEstudiante > 0) {
+                precioEstudiante--;
+                precioEstudianteTextView.setText("$" + precioEstudiante + ".00");
+            }
+        });
+
+
+        btnMasTerceraEdad.setOnClickListener(v -> {
+            precioTerceraEdad++;
+            precioTerceraEdadTextView.setText("$" + precioTerceraEdad + ".00");
+        });
+
+        btnMenosTerceraEdad.setOnClickListener(v -> {
+            if (precioTerceraEdad > 0) {
+                precioTerceraEdad--;
+                precioTerceraEdadTextView.setText("$" + precioTerceraEdad + ".00");
+            }
+        });
+
+
         // Botones para incrementar el contador
         btnMas.setOnClickListener(v -> {
             contador++;
@@ -128,7 +191,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Venta tercera edad: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
         btnTerceraEdad.setOnClickListener(v -> {
             generateSingleTicketText("Tercera Edad", contador);
-            acumularVenta("Tercera Edad", PRECIO_TERCERA_EDAD);
+            acumularVenta("Tercera Edad", precioTerceraEdad);
             resetCounter();
             // Llamamos al metodo para reproducir Sonido
             reproducirSonidoClick();
@@ -137,7 +200,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Venta Normal: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
         btnPasajeNormal.setOnClickListener(v -> {
             generateSingleTicketText("Pasaje Normal", contador);
-            acumularVenta("Pasaje Normal", PRECIO_NORMAL);
+            acumularVenta("Pasaje Normal", precioNormal);
             resetCounter();
             // Llamamos al metodo para reproducir Sonido
             reproducirSonidoClick();
@@ -147,7 +210,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Venta Estudiante: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
         btnEstudiante.setOnClickListener(v -> {
             generateSingleTicketText("Estudiante", contador);
-            acumularVenta("Estudiante", PRECIO_ESTUDIANTE);
+            acumularVenta("Estudiante", precioEstudiante);
             resetCounter();
             // Llamamos al metodo para reproducir Sonido
             reproducirSonidoClick();
@@ -226,13 +289,13 @@ public class CobroActivity extends BaseStatusBluetooth {
         int precio;
         switch (tipo) {
             case "Pasaje Normal":
-                precio = PRECIO_NORMAL;
+                precio = precioNormal;
                 break;
             case "Estudiante":
-                precio = PRECIO_ESTUDIANTE;
+                precio = precioEstudiante;
                 break;
             case "Tercera Edad":
-                precio = PRECIO_TERCERA_EDAD;
+                precio = precioTerceraEdad;
                 break;
             default:
                 precio = 0;

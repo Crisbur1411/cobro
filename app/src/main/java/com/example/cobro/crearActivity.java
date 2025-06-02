@@ -42,11 +42,13 @@ public class crearActivity extends AppCompatActivity {
         passwordInput = findViewById(R.id.passwordInput);
         identificadorInput = findViewById(R.id.identificadorInput);
         btnCrear = findViewById(R.id.butto);
-        btnBorrar = findViewById(R.id.borrarDatos);
+        //btnBorrar = findViewById(R.id.borrarDatos);
 
         // Instanciar base de datos local
         dbHelper = new DatabaseHelper(this);
 
+
+/*
 
 
         // Acción al presionar "Borrar datos"
@@ -60,7 +62,7 @@ public class crearActivity extends AppCompatActivity {
                 Toast.makeText(crearActivity.this, "Usuarios eliminados de la base de datos local", Toast.LENGTH_SHORT).show();
             }
         });
-
+*/
 
 
         // Acción al presionar "Crear usuario"

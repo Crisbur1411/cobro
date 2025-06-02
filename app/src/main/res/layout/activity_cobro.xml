@@ -9,110 +9,253 @@
     tools:context=".CobroActivity">
 
 
-    <LinearLayout
-        android:id="@+id/btnEstudiante"
-        android:layout_width="300dp"
-        android:layout_height="130dp"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/borde_btn_estudiante"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnPasajeNormal">
+    <!-- BOTÓN NORMAL -->
 
-        <!-- Icono a la izquierda -->
-        <ImageView
-            android:id="@+id/iconEstudent"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/birrete" />
+    <!-- BOTÓN ESTUDIANTE -->
 
-        <TextView
-            android:id="@+id/BotonEstudiante"
-            android:layout_width="208dp"
-            android:layout_height="wrap_content"
-            android:text="@string/lbl_estudiante"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="25dp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/btnPasajeNormal"
-        android:layout_width="300dp"
-        android:layout_height="130dp"
-        android:layout_marginTop="52dp"
-        android:background="@drawable/borde_btn_normal"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <!-- Icono a la izquierda -->
-        <ImageView
-            android:id="@+id/iconNormal"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/persona" />
-
-        <TextView
-            android:id="@+id/BotonNormal"
-            android:layout_width="208dp"
-            android:layout_height="wrap_content"
-            android:text="@string/lbl_normal"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="25dp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/btnTerceraEdad"
-        android:layout_width="300dp"
-        android:layout_height="130dp"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/borde_btn_tercera_edad"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnEstudiante">
-
-        <!-- Icono a la izquierda -->
-        <ImageView
-            android:id="@+id/iconTerceraEdad"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:layout_marginEnd="8dp"
-            android:src="@drawable/tercera_edad" />
-
-        <TextView
-            android:id="@+id/BotonTerceraEdad"
-            android:layout_width="208dp"
-            android:layout_height="wrap_content"
-            android:text="@string/lbl_tercera_edad"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="25dp"
-            android:textStyle="bold" />
-    </LinearLayout>
+    <!-- BOTÓN TERCERA EDAD -->
 
 
     <!-- activity_cobro.xml -->
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:layout_marginTop="60dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/btnMenosNormal"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="-"
+            android:textColor="@color/black"
+            android:textSize="30sp" />
+
+        <LinearLayout
+            android:id="@+id/btnPasajeNormal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/borde_btn_normal"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/iconNormal"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/persona" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/BotonNormal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lbl_normal"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/precioNormal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$18.00"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="20sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnMasNormal"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="+"
+            android:textColor="@color/black"
+            android:textSize="30sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout">
+
+        <Button
+            android:id="@+id/btnMenosEstudiante"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="-"
+            android:textColor="@color/black"
+            android:textSize="30sp" />
+
+        <LinearLayout
+            android:id="@+id/btnEstudiante"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/borde_btn_estudiante"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/iconEstudent"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/birrete" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/BotonEstudiante"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lbl_estudiante"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/precioEstudiante"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$12.00"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="20sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnMasEstudiante"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="+"
+            android:textColor="@color/black"
+            android:textSize="30sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout4"
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
+
+        <Button
+            android:id="@+id/btnMenosTerceraEdad"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="-"
+            android:textColor="@color/black"
+            android:textSize="30sp" />
+
+        <LinearLayout
+            android:id="@+id/btnTerceraEdad"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/borde_btn_tercera_edad"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <ImageView
+                android:id="@+id/iconTerceraEdad"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/tercera_edad" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/BotonTerceraEdad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/lbl_tercera_edad"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/precioTerceraEdad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="$5.00"
+                    android:textAlignment="center"
+                    android:textColor="@color/white"
+                    android:textSize="20sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnMasTerceraEdad"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:text="+"
+            android:textColor="@color/black"
+            android:textSize="30sp" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tvNumero"
@@ -126,8 +269,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnTerceraEdad"
-        app:layout_constraintVertical_bias="0.100000024" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout4"
+        app:layout_constraintVertical_bias="0.16000003" />
 
     <LinearLayout
         android:id="@+id/lyUltimaTransaccion"
@@ -176,8 +319,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.9"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnTerceraEdad"
-        app:layout_constraintVertical_bias="0.099" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout4"
+        app:layout_constraintVertical_bias="0.16000003" />
 
     <Button
         android:id="@+id/btnMenos"
@@ -191,8 +334,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnTerceraEdad"
-        app:layout_constraintVertical_bias="0.099" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout4"
+        app:layout_constraintVertical_bias="0.16000003" />
 
     <LinearLayout
         android:id="@+id/estadoConexionLayout"
