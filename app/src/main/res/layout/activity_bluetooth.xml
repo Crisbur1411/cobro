@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/blanco"
     tools:context=".Bluetooth">
 
     <ListView
@@ -12,10 +13,13 @@
         android:layout_width="413dp"
         android:layout_height="673dp"
         android:layout_marginTop="60dp"
-        android:divider="@android:color/darker_gray"
+        android:divider="@android:color/black"
         android:dividerHeight="0.5dp"
+        android:cacheColorHint="@android:color/transparent"
+        android:textColor="@android:color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 
     <TextView
         android:id="@+id/textView10"
@@ -23,12 +27,13 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="64dp"
         android:layout_marginTop="16dp"
-        android:divider="@android:color/darker_gray"
         android:text="Selecciona un Dispositivo"
         android:textSize="20sp"
         android:textStyle="bold"
+        android:textColor="@android:color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
