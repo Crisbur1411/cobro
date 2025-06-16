@@ -26,4 +26,13 @@ public interface ApiService {
             @Header("Authorization") String authHeader,
             @Body RequestBody body);
 
+
+    //llamada para recibir tarifas del servidor
+    @POST("driver/fares/get")
+    Call<TarifasResponse> obtenerTarifas(
+            @Header("Authorization") String authHeader,
+            @Body TarifasRequest body
+    );
+
+
 }

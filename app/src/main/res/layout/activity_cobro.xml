@@ -80,7 +80,7 @@
                     android:id="@+id/precioNormal"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$18.00"
+                    android:text="$6.00"
                     android:textAlignment="center"
                     android:textColor="@color/white"
                     android:textSize="20sp" />
@@ -160,7 +160,7 @@
                     android:id="@+id/precioEstudiante"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$12.00"
+                    android:text="$5.00"
                     android:textAlignment="center"
                     android:textColor="@color/white"
                     android:textSize="20sp" />
@@ -239,7 +239,7 @@
                     android:id="@+id/precioTerceraEdad"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="$5.00"
+                    android:text="$3.00"
                     android:textAlignment="center"
                     android:textColor="@color/white"
                     android:textSize="20sp" />

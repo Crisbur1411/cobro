@@ -6,20 +6,28 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.gson.Gson;
 
 import androidx.appcompat.app.AlertDialog;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import android.media.MediaPlayer;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class CobroActivity extends BaseStatusBluetooth {
 
@@ -30,15 +38,16 @@ public class CobroActivity extends BaseStatusBluetooth {
 
     // Precios fijos
 
-    private int precioNormal;
-    private int precioEstudiante;
-    private int precioTerceraEdad;
+    private double precioNormal = 0;
+    private double precioEstudiante = 0;
+    private double precioTerceraEdad= 0;
+    private double precioNormalMaximo = 0;
 
 
     private control_cortes dbHelper; // Instancia de la clase que maneja la BD para cortes parciales
 
-    private TextView tvUltimaTransaccion; //TextView para Mostrar última transacción
-    private String passwordUsuario; // Variable para almacenar la contraseña
+    private TextView tvUltimaTransaccion, precioNormalTextView, precioEstudianteTextView, precioTerceraEdadTextView; //TextView para Mostrar última transacción
+    private String passwordUsuario, token, identificador; // Variable para almacenar la contraseña
     private MediaPlayer sonidoClick; // Maneja los sonidos del dispositivo
 
     private SharedPreferences prefs;     //Se declara SharedPreferences para almacenar informacion necesaria
@@ -51,6 +60,8 @@ public class CobroActivity extends BaseStatusBluetooth {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cobro);
+
+
 
         //Navegacion de secciones
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -101,6 +112,98 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Inicializar la base de datos
         dbHelper = new control_cortes(this);
 
+
+        token = CortesActivity.TokenManager.getToken(this);
+
+
+
+        // Obtener identificador de dispositivo desde la base de datos local
+        // Se obtiene el id almacenado en sharedPreferences
+                int userIdLocal = sharedPreferences.getInt("userIdLocal", -1);  // Valor por defecto en caso de error
+
+        // Cuando se obtiene el id se inicia la condición
+        if (userIdLocal != -1) {
+            // Se inicializa la base de datos y se llama al metodo obtenerUsuarioPorId para obtener los datos
+            DatabaseHelper dbHelper = new DatabaseHelper(this);
+            Cursor cursor = dbHelper.obtenerUsuarioPorId(userIdLocal);
+
+            // Cuando la condición se cumple obtiene el identificador
+            if (cursor != null && cursor.moveToFirst()) {
+                int identificadorIndex = cursor.getColumnIndexOrThrow("identificador");
+                identificador = cursor.getString(identificadorIndex);
+
+                Log.d("DatosUsuario", "Identificador: " + identificador);
+
+            } else {
+                Log.d("DatosUsuario", "No se encontró usuario con ID: " + userIdLocal);
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+        } else {
+            Log.d("DatosUsuario", "No se encontró el ID de usuario en SharedPreferences");
+        }
+
+
+
+        TarifasRequest getTarifas = new TarifasRequest(identificador);
+
+        // Convertir a JSON manualmente con Gson
+                Gson gson = new Gson();
+                String jsonEnviado = gson.toJson(getTarifas);
+
+        // Mostrarlo en un Toast
+                Toast.makeText(CobroActivity.this, "JSON enviado: " + jsonEnviado, Toast.LENGTH_LONG).show();
+
+        // Ahora sí haces la llamada Retrofit
+        ApiClient.getApiService().obtenerTarifas("Bearer " + token, getTarifas)
+                .enqueue(new Callback<TarifasResponse>() {
+                    @Override
+                    public void onResponse(Call<TarifasResponse> call, Response<TarifasResponse> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            TarifasResponse tarifasResponse = response.body();
+
+                            if (tarifasResponse.isStatus()) {
+                                List<TarifasResponse.Fare> tarifas = tarifasResponse.getData();
+
+                                for (TarifasResponse.Fare tarifa : tarifas) {
+                                    switch (tarifa.getPassenger_type()) {
+                                        case "REGULAR":
+                                            if (tarifa.getFare().equals("MíNIMA")) {
+                                                precioNormal = Double.parseDouble(tarifa.getPrice());
+                                            } else if (tarifa.getFare().equals("MáXIMA")) {
+                                                precioNormalMaximo = Double.parseDouble(tarifa.getPrice());
+                                            }
+                                            break;
+                                        case "ESTUDIANTE":
+                                            precioEstudiante = Double.parseDouble(tarifa.getPrice());
+                                            break;
+                                        case "3ERA. EDAD":
+                                            precioTerceraEdad = Double.parseDouble(tarifa.getPrice());
+                                            break;
+                                    }
+                                }
+
+                                // Mostrar en Toast para verificar
+                                Toast.makeText(CobroActivity.this,
+                                        "Normal: " + precioNormal +
+                                                " | Estudiante: " + precioEstudiante +
+                                                " | 3ra Edad: " + precioTerceraEdad,
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<TarifasResponse> call, Throwable t) {
+                        Toast.makeText(CobroActivity.this, "Fallo: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+
+
+
         // Referencias a la interfaz para botones y numero de transaccion
         Button btnMas = findViewById(R.id.btnMas);
         Button btnMenos = findViewById(R.id.btnMenos);
@@ -112,20 +215,17 @@ public class CobroActivity extends BaseStatusBluetooth {
         tvNumero.setText(String.valueOf(contador));
 
 
-        precioNormal = 18;
-        precioEstudiante = 12;
-        precioTerceraEdad = 5;
 
-        TextView precioNormalTextView = findViewById(R.id.precioNormal);
+        precioNormalTextView = findViewById(R.id.precioNormal);
         Button btnMasNormal = findViewById(R.id.btnMasNormal);
         Button btnMenosNormal = findViewById(R.id.btnMenosNormal);
 
 
-        TextView precioEstudianteTextView = findViewById(R.id.precioEstudiante);
+        precioEstudianteTextView = findViewById(R.id.precioEstudiante);
         Button btnMasEstudiante = findViewById(R.id.btnMasEstudiante);
         Button btnMenosEstudiante = findViewById(R.id.btnMenosEstudiante);
 
-        TextView precioTerceraEdadTextView = findViewById(R.id.precioTerceraEdad);
+        precioTerceraEdadTextView = findViewById(R.id.precioTerceraEdad);
         Button btnMasTerceraEdad = findViewById(R.id.btnMasTerceraEdad);
         Button btnMenosTerceraEdad = findViewById(R.id.btnMenosTerceraEdad);
 
@@ -134,40 +234,47 @@ public class CobroActivity extends BaseStatusBluetooth {
 
 
         btnMasNormal.setOnClickListener(v -> {
-            precioNormal++;
-            precioNormalTextView.setText("$" + precioNormal + ".00");
+            if (precioNormal < precioNormalMaximo) {
+                precioNormal++;
+                precioNormalTextView.setText("$" + precioNormal + "0");
+            }
         });
 
         btnMenosNormal.setOnClickListener(v -> {
-            if (precioNormal > 0) {
+            if (precioNormal > 6) {
                 precioNormal--;
-                precioNormalTextView.setText("$" + precioNormal + ".00");
+                precioNormalTextView.setText("$" + precioNormal + "0");
             }
         });
+
+
+/*
 
 
         btnMasEstudiante.setOnClickListener(v -> {
             precioEstudiante++;
-            precioEstudianteTextView.setText("$" + precioEstudiante + ".00");
+            precioEstudianteTextView.setText("$" + precioEstudiante + "0");
         });
-
+*/
         btnMenosEstudiante.setOnClickListener(v -> {
-            if (precioEstudiante > 0) {
+            if (precioEstudiante > 5) {
                 precioEstudiante--;
-                precioEstudianteTextView.setText("$" + precioEstudiante + ".00");
+                precioEstudianteTextView.setText("$" + precioEstudiante + "0");
             }
         });
+
+/*
 
 
         btnMasTerceraEdad.setOnClickListener(v -> {
             precioTerceraEdad++;
-            precioTerceraEdadTextView.setText("$" + precioTerceraEdad + ".00");
+            precioTerceraEdadTextView.setText("$" + precioTerceraEdad + "0");
         });
-
+*/
         btnMenosTerceraEdad.setOnClickListener(v -> {
-            if (precioTerceraEdad > 0) {
+            if (precioTerceraEdad > 3) {
                 precioTerceraEdad--;
-                precioTerceraEdadTextView.setText("$" + precioTerceraEdad + ".00");
+                precioTerceraEdadTextView.setText("$" + precioTerceraEdad + "0");
             }
         });
 
@@ -195,6 +302,8 @@ public class CobroActivity extends BaseStatusBluetooth {
             resetCounter();
             // Llamamos al metodo para reproducir Sonido
             reproducirSonidoClick();
+            resetearPrecios();
+
         });
 
         // Venta Normal: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
@@ -204,6 +313,7 @@ public class CobroActivity extends BaseStatusBluetooth {
             resetCounter();
             // Llamamos al metodo para reproducir Sonido
             reproducirSonidoClick();
+            resetearPrecios();
 
         });
 
@@ -214,9 +324,23 @@ public class CobroActivity extends BaseStatusBluetooth {
             resetCounter();
             // Llamamos al metodo para reproducir Sonido
             reproducirSonidoClick();
+            resetearPrecios();
+
         });
 
     }
+
+
+    private void resetearPrecios() {
+        precioNormal = 6;
+        precioEstudiante = 5;
+        precioTerceraEdad = 3;
+
+        precioNormalTextView.setText("$" + precioNormal + "0");
+        precioEstudianteTextView.setText("$" + precioEstudiante + "0");
+        precioTerceraEdadTextView.setText("$" + precioTerceraEdad + "0");
+    }
+
 
     //Metodo para cerrar sesión por el menu inferior de ventanas
     private void cerrarSesion() {
@@ -286,7 +410,7 @@ public class CobroActivity extends BaseStatusBluetooth {
     //Genera el ticket individual en formato de texto y lo muestra en un diálogo.
     private void generateSingleTicketText(String tipo, int cantidad) {
         String fechaHora = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy", Locale.getDefault()).format(new Date());
-        int precio;
+        double precio;
         switch (tipo) {
             case "Pasaje Normal":
                 precio = precioNormal;
@@ -301,7 +425,7 @@ public class CobroActivity extends BaseStatusBluetooth {
                 precio = 0;
         }
 
-        int total = cantidad * precio;
+        double total = cantidad * precio;
         String tipoAbreviado;
         switch (tipo) {
             case "Pasaje Normal":
