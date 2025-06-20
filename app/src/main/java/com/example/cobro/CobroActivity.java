@@ -9,7 +9,10 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,8 +24,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+
 import android.media.MediaPlayer;
 
 import retrofit2.Call;
@@ -42,8 +48,12 @@ public class CobroActivity extends BaseStatusBluetooth {
     private double precioEstudiante = 0;
     private double precioTerceraEdad= 0;
     private double precioNormalMaximo = 0;
+    private Map<String, Integer> iconosTarifas;
+    private Map<String, TarifaControl> tarifasPorTipo;
 
 
+
+    private LinearLayout layoutTarifas; //Layout para mostrar tarifas
     private control_cortes dbHelper; // Instancia de la clase que maneja la BD para cortes parciales
 
     private TextView tvUltimaTransaccion, precioNormalTextView, precioEstudianteTextView, precioTerceraEdadTextView; //TextView para Mostrar última transacción
@@ -89,6 +99,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Inicializar el TextView del estado de conexión
         tvEstadoConexion = findViewById(R.id.tvEstadoConexion);
         imgEstadoConexion = findViewById(R.id.imgEstadoConexion);
+        layoutTarifas = findViewById(R.id.layoutTarifas);
 
 
         // Inicializar sonido al cargar la actividad
@@ -114,6 +125,13 @@ public class CobroActivity extends BaseStatusBluetooth {
 
 
         token = CortesActivity.TokenManager.getToken(this);
+        iconosTarifas = new HashMap<>();
+        iconosTarifas.put("REGULAR", R.drawable.persona);
+        iconosTarifas.put("ESTUDIANTE", R.drawable.birrete);
+        iconosTarifas.put("3ERA. EDAD", R.drawable.tercera_edad);
+        iconosTarifas.put("DISCAPACITADO", R.drawable.discapacitado);
+
+        tarifasPorTipo = new HashMap<>();
 
 
 
@@ -156,7 +174,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Mostrarlo en un Toast
                 Toast.makeText(CobroActivity.this, "JSON enviado: " + jsonEnviado, Toast.LENGTH_LONG).show();
 
-        // Ahora sí haces la llamada Retrofit
+        // Llamada a la API
         ApiClient.getApiService().obtenerTarifas("Bearer " + token, getTarifas)
                 .enqueue(new Callback<TarifasResponse>() {
                     @Override
@@ -167,31 +185,50 @@ public class CobroActivity extends BaseStatusBluetooth {
                             if (tarifasResponse.isStatus()) {
                                 List<TarifasResponse.Fare> tarifas = tarifasResponse.getData();
 
+                                // Clasificar tarifas
                                 for (TarifasResponse.Fare tarifa : tarifas) {
-                                    switch (tarifa.getPassenger_type()) {
+                                    String passengerType = tarifa.getPassenger_type();
+                                    double precio = Double.parseDouble(tarifa.getPrice());
+
+                                    if (!tarifasPorTipo.containsKey(passengerType)) {
+                                        tarifasPorTipo.put(passengerType, new TarifaControl(Double.MAX_VALUE, 0, 0));
+                                    }
+
+                                    TarifaControl control = tarifasPorTipo.get(passengerType);
+
+                                    switch (tarifa.getFare().toUpperCase()) {
+                                        case "MÍNIMA":
+                                            control.precioMinimo = precio;
+                                            break;
+                                        case "MÁXIMA":
+                                            control.precioMaximo = precio;
+                                            break;
                                         case "REGULAR":
-                                            if (tarifa.getFare().equals("MíNIMA")) {
-                                                precioNormal = Double.parseDouble(tarifa.getPrice());
-                                            } else if (tarifa.getFare().equals("MáXIMA")) {
-                                                precioNormalMaximo = Double.parseDouble(tarifa.getPrice());
-                                            }
-                                            break;
-                                        case "ESTUDIANTE":
-                                            precioEstudiante = Double.parseDouble(tarifa.getPrice());
-                                            break;
-                                        case "3ERA. EDAD":
-                                            precioTerceraEdad = Double.parseDouble(tarifa.getPrice());
+                                            control.precioActual = precio;
                                             break;
                                     }
                                 }
 
-                                // Mostrar en Toast para verificar
-                                Toast.makeText(CobroActivity.this,
-                                        "Normal: " + precioNormal +
-                                                " | Estudiante: " + precioEstudiante +
-                                                " | 3ra Edad: " + precioTerceraEdad,
-                                        Toast.LENGTH_LONG).show();
+                                // Ajustar precioActual al mínimo si sigue en 0 y tiene mínimo válido
+                                for (Map.Entry<String, TarifaControl> entry : tarifasPorTipo.entrySet()) {
+                                    TarifaControl control = entry.getValue();
+                                    if (control.precioActual == 0 && control.precioMinimo != Double.MAX_VALUE) {
+                                        control.precioActual = control.precioMinimo;
+                                    }
+                                }
+
+                                // Ahora sí, agregar las cards
+                                for (Map.Entry<String, TarifaControl> entry : tarifasPorTipo.entrySet()) {
+                                    String passengerType = entry.getKey();
+                                    TarifaControl control = entry.getValue();
+                                    agregarBotonTarifa(passengerType, control);
+                                }
+
+                            } else {
+                                Toast.makeText(CobroActivity.this, "No se obtuvieron tarifas", Toast.LENGTH_SHORT).show();
                             }
+                        } else {
+                            Toast.makeText(CobroActivity.this, "Error al obtener tarifas", Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -204,79 +241,12 @@ public class CobroActivity extends BaseStatusBluetooth {
 
 
 
+
         // Referencias a la interfaz para botones y numero de transaccion
         Button btnMas = findViewById(R.id.btnMas);
-        Button btnMenos = findViewById(R.id.btnMenos);
-        btnTerceraEdad = findViewById(R.id.btnTerceraEdad);
-        btnPasajeNormal = findViewById(R.id.btnPasajeNormal);
-        btnEstudiante = findViewById(R.id.btnEstudiante);
+        Button btnMenos = findViewById(R.id.btnMenos);;
         tvNumero = findViewById(R.id.tvNumero);
-
         tvNumero.setText(String.valueOf(contador));
-
-
-
-        precioNormalTextView = findViewById(R.id.precioNormal);
-        Button btnMasNormal = findViewById(R.id.btnMasNormal);
-        Button btnMenosNormal = findViewById(R.id.btnMenosNormal);
-
-
-        precioEstudianteTextView = findViewById(R.id.precioEstudiante);
-        Button btnMasEstudiante = findViewById(R.id.btnMasEstudiante);
-        Button btnMenosEstudiante = findViewById(R.id.btnMenosEstudiante);
-
-        precioTerceraEdadTextView = findViewById(R.id.precioTerceraEdad);
-        Button btnMasTerceraEdad = findViewById(R.id.btnMasTerceraEdad);
-        Button btnMenosTerceraEdad = findViewById(R.id.btnMenosTerceraEdad);
-
-
-
-
-
-        btnMasNormal.setOnClickListener(v -> {
-            if (precioNormal < precioNormalMaximo) {
-                precioNormal++;
-                precioNormalTextView.setText("$" + precioNormal + "0");
-            }
-        });
-
-        btnMenosNormal.setOnClickListener(v -> {
-            if (precioNormal > 6) {
-                precioNormal--;
-                precioNormalTextView.setText("$" + precioNormal + "0");
-            }
-        });
-
-
-/*
-
-
-        btnMasEstudiante.setOnClickListener(v -> {
-            precioEstudiante++;
-            precioEstudianteTextView.setText("$" + precioEstudiante + "0");
-        });
-*/
-        btnMenosEstudiante.setOnClickListener(v -> {
-            if (precioEstudiante > 5) {
-                precioEstudiante--;
-                precioEstudianteTextView.setText("$" + precioEstudiante + "0");
-            }
-        });
-
-/*
-
-
-        btnMasTerceraEdad.setOnClickListener(v -> {
-            precioTerceraEdad++;
-            precioTerceraEdadTextView.setText("$" + precioTerceraEdad + "0");
-        });
-*/
-        btnMenosTerceraEdad.setOnClickListener(v -> {
-            if (precioTerceraEdad > 3) {
-                precioTerceraEdad--;
-                precioTerceraEdadTextView.setText("$" + precioTerceraEdad + "0");
-            }
-        });
 
 
         // Botones para incrementar el contador
@@ -295,51 +265,72 @@ public class CobroActivity extends BaseStatusBluetooth {
             reproducirSonidoClick();
         });
 
-        // Venta tercera edad: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
-        btnTerceraEdad.setOnClickListener(v -> {
-            generateSingleTicketText("Tercera Edad", contador);
-            acumularVenta("Tercera Edad", precioTerceraEdad);
-            resetCounter();
-            // Llamamos al metodo para reproducir Sonido
-            reproducirSonidoClick();
-            resetearPrecios();
 
-        });
-
-        // Venta Normal: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
-        btnPasajeNormal.setOnClickListener(v -> {
-            generateSingleTicketText("Pasaje Normal", contador);
-            acumularVenta("Pasaje Normal", precioNormal);
-            resetCounter();
-            // Llamamos al metodo para reproducir Sonido
-            reproducirSonidoClick();
-            resetearPrecios();
-
-        });
-
-        // Venta Estudiante: genera ticket de texto y lo muestra en un diálogo, acumula la venta y reinicia el contador
-        btnEstudiante.setOnClickListener(v -> {
-            generateSingleTicketText("Estudiante", contador);
-            acumularVenta("Estudiante", precioEstudiante);
-            resetCounter();
-            // Llamamos al metodo para reproducir Sonido
-            reproducirSonidoClick();
-            resetearPrecios();
-
-        });
 
     }
 
 
-    private void resetearPrecios() {
-        precioNormal = 6;
-        precioEstudiante = 5;
-        precioTerceraEdad = 3;
+    private void agregarBotonTarifa(String passengerType, TarifaControl control) {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View vistaTarifa = inflater.inflate(R.layout.card_tarifa, null);
 
-        precioNormalTextView.setText("$" + precioNormal + "0");
-        precioEstudianteTextView.setText("$" + precioEstudiante + "0");
-        precioTerceraEdadTextView.setText("$" + precioTerceraEdad + "0");
+        TextView txtNombreTarifa = vistaTarifa.findViewById(R.id.txtNombreTarifa);
+        TextView txtPrecioTarifa = vistaTarifa.findViewById(R.id.txtPrecioTarifa);
+        ImageView iconTarifa = vistaTarifa.findViewById(R.id.iconTarifa);
+        Button btnMasTarifa = vistaTarifa.findViewById(R.id.btnMasTarifa);
+        Button btnMenosTarifa = vistaTarifa.findViewById(R.id.btnMenosTarifa);
+        LinearLayout cardTarifa = vistaTarifa.findViewById(R.id.cardTarifa);
+
+        // Asignar nombre y precio inicial
+        txtNombreTarifa.setText(passengerType);
+        txtPrecioTarifa.setText("$" + String.format(Locale.US, "%.2f", control.precioActual));
+
+        // Ícono según tipo
+        Integer iconoRes = iconosTarifas.get(passengerType);
+        if (iconoRes == null) {
+            iconoRes = R.drawable.persona;
+        }
+        iconTarifa.setImageResource(iconoRes);
+
+        if (control.precioMinimo == Double.MAX_VALUE || control.precioMaximo == 0) {
+            btnMasTarifa.setVisibility(View.GONE);
+            btnMenosTarifa.setVisibility(View.GONE);
+        } else {
+            btnMasTarifa.setOnClickListener(v -> {
+                if (control.precioActual + 1 <= control.precioMaximo) {
+                    control.precioActual += 1;
+                    txtPrecioTarifa.setText("$" + String.format(Locale.US, "%.2f", control.precioActual));
+                }
+            });
+
+            btnMenosTarifa.setOnClickListener(v -> {
+                if (control.precioActual - 1 >= control.precioMinimo) {
+                    control.precioActual -= 1;
+                    txtPrecioTarifa.setText("$" + String.format(Locale.US, "%.2f", control.precioActual));
+                }
+            });
+        }
+
+        // Ahora sí: clic en todo el card genera ticket, venta y sonido
+        cardTarifa.setOnClickListener(v -> {
+            reproducirSonidoClick();
+            acumularVenta(passengerType, control.precioActual);
+            generateSingleTicketText(passengerType, contador, control.precioActual);
+            resetCounter();
+        });
+
+        // Margen inferior programado opcional
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.setMargins(0, 0, 0, 16); // separador de 16dp abajo
+        vistaTarifa.setLayoutParams(params);
+
+        layoutTarifas.addView(vistaTarifa);
     }
+
+
+
 
 
     //Metodo para cerrar sesión por el menu inferior de ventanas
@@ -408,57 +399,30 @@ public class CobroActivity extends BaseStatusBluetooth {
     }
 
     //Genera el ticket individual en formato de texto y lo muestra en un diálogo.
-    private void generateSingleTicketText(String tipo, int cantidad) {
+    private void generateSingleTicketText(String tipo, int cantidad, double precio) {
         String fechaHora = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy", Locale.getDefault()).format(new Date());
-        double precio;
-        switch (tipo) {
-            case "Pasaje Normal":
-                precio = precioNormal;
-                break;
-            case "Estudiante":
-                precio = precioEstudiante;
-                break;
-            case "Tercera Edad":
-                precio = precioTerceraEdad;
-                break;
-            default:
-                precio = 0;
-        }
-
         double total = cantidad * precio;
-        String tipoAbreviado;
-        switch (tipo) {
-            case "Pasaje Normal":
-                tipoAbreviado = "P.N";
-                break;
-            case "Estudiante":
-                tipoAbreviado = "E";
-                break;
-            case "Tercera Edad":
-                tipoAbreviado = "T.E";
-                break;
-            default:
-                tipoAbreviado = "X";
-                break;
-        }
 
-        // Mostrar resumen en pantalla
-        String resumenTransaccion = "TICKET #" + numeroTransaccion + "\n" + cantidad + " " + tipo + "  MXN$" + total + " - " + fechaHora;
+        String resumenTransaccion = "TICKET #" + numeroTransaccion + "\n"
+                + cantidad + " " + tipo + "  MXN$" + total + " - " + fechaHora;
+
         tvUltimaTransaccion.setText(resumenTransaccion);
         showTextDialog("Ticket " + tipo, resumenTransaccion);
 
         for (int i = 0; i < cantidad; i++) {
-            String mensajeIndividual = "#" + numeroTransaccion + "\n" + "Tipo : " + tipo + "\n"
-                    + "Costo : $ " + precio + "\n" + "Hora y Fecha: " + fechaHora + "\n"
+            String mensajeIndividual = "#" + numeroTransaccion + "\n"
+                    + "Tipo : " + tipo + "\n"
+                    + "Costo : $ " + precio + "\n"
+                    + "Hora y Fecha: " + fechaHora + "\n"
                     + "----------------------------------------\n"
                     + "Este Boleto ampara el Seguro del Viajero";
+
             printTicket(mensajeIndividual);
             numeroTransaccion++;
-
-            // Guardar el nuevo de transaccion número en SharedPreferences
             prefs.edit().putInt("numeroTransaccion", numeroTransaccion).apply();
         }
     }
+
 
     /*
 
