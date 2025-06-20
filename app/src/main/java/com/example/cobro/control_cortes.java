@@ -23,7 +23,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 17; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
+    private static final int DATABASE_VERSION = 18; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
 
     //Creacion de tabla donde se almacenan los cortes parciales con la informacion de ventas
     private static final String TABLE_CREATE =
@@ -72,6 +72,7 @@ public class control_cortes extends SQLiteOpenHelper {
             "CREATE TABLE boletos_vendidos (" +
             "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
             "tipo TEXT, " +
+                    "routeFareId INTEGER, " +
             "precio REAL, " +
             "fecha TEXT, " +
             "status INTEGER DEFAULT 0);";
@@ -177,10 +178,11 @@ public class control_cortes extends SQLiteOpenHelper {
     }
 
     //Metodo para insertar boletos individuales
-    public void insertarBoleto(String tipo, double precio, String fecha) {
+    public void insertarBoleto(String tipo, int routeFareId, double precio, String fecha) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("tipo", tipo);
+        values.put("routeFareId", routeFareId);
         values.put("precio", precio);
         values.put("fecha", fecha);
         values.put("status", 0); // pendiente

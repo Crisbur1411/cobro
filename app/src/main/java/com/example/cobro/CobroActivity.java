@@ -50,6 +50,9 @@ public class CobroActivity extends BaseStatusBluetooth {
     private double precioNormalMaximo = 0;
     private Map<String, Integer> iconosTarifas;
     private Map<String, TarifaControl> tarifasPorTipo;
+    private Map<String, Integer> tarifaIdsPorTipo = new HashMap<>();
+
+
 
 
 
@@ -135,6 +138,7 @@ public class CobroActivity extends BaseStatusBluetooth {
 
 
 
+
         // Obtener identificador de dispositivo desde la base de datos local
         // Se obtiene el id almacenado en sharedPreferences
                 int userIdLocal = sharedPreferences.getInt("userIdLocal", -1);  // Valor por defecto en caso de error
@@ -192,6 +196,8 @@ public class CobroActivity extends BaseStatusBluetooth {
 
                                     if (!tarifasPorTipo.containsKey(passengerType)) {
                                         tarifasPorTipo.put(passengerType, new TarifaControl(Double.MAX_VALUE, 0, 0));
+                                        // Aquí guarda su id de tarifa
+                                        tarifaIdsPorTipo.put(passengerType, tarifa.getRouteFareId());
                                     }
 
                                     TarifaControl control = tarifasPorTipo.get(passengerType);
@@ -208,6 +214,7 @@ public class CobroActivity extends BaseStatusBluetooth {
                                             break;
                                     }
                                 }
+
 
                                 // Ajustar precioActual al mínimo si sigue en 0 y tiene mínimo válido
                                 for (Map.Entry<String, TarifaControl> entry : tarifasPorTipo.entrySet()) {
@@ -314,10 +321,12 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Ahora sí: clic en todo el card genera ticket, venta y sonido
         cardTarifa.setOnClickListener(v -> {
             reproducirSonidoClick();
-            acumularVenta(passengerType, control.precioActual);
+            int routeFareId = tarifaIdsPorTipo.get(passengerType);
+            acumularVenta(passengerType, routeFareId, control.precioActual);
             generateSingleTicketText(passengerType, contador, control.precioActual);
             resetCounter();
         });
+
 
         // Margen inferior programado opcional
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -384,12 +393,13 @@ public class CobroActivity extends BaseStatusBluetooth {
     }
 
     //Acumula la venta en los mapas para los cortes.
-    public void acumularVenta(String tipo, double precio) {
+    public void acumularVenta(String tipo, int routeFareId, double precio) {
         String fecha = obtenerFechaActual();
         for (int i = 0; i < contador; i++) {
-            dbHelper.insertarBoleto(tipo, precio, fecha);
+            dbHelper.insertarBoleto(tipo, routeFareId, precio, fecha);
         }
     }
+
 
     //Reinicia el contador individual a 1 y actualiza la vista.
 

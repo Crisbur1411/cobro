@@ -16,13 +16,13 @@ public class TarifasResponse {
     }
 
     public static class Fare {
-        private int id;
+        private int routeFareId;
         private String fare;
         private String passenger_type;
         private String price;
 
-        public int getId() {
-            return id;
+        public int getRouteFareId() {
+            return routeFareId;
         }
 
         public String getFare() {
