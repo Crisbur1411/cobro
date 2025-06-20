@@ -23,7 +23,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 18; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
+    private static final int DATABASE_VERSION = 19; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
 
     //Creacion de tabla donde se almacenan los cortes parciales con la informacion de ventas
     private static final String TABLE_CREATE =
@@ -217,10 +217,22 @@ public class control_cortes extends SQLiteOpenHelper {
      *Metodo para Obtener los boletos individuales por tipo y con estatus 0 para utilizados en el corte parcial
      *Y posteriormente registrarlos en cortes parciales
      */
-    public Cursor obtenerBoletosVendidosPorTipo(String tipo) {
+
+    public Cursor obtenerBoletosVendidosAgrupados() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM boletos_vendidos WHERE tipo = ? AND status = 0", new String[]{tipo});
+        return db.rawQuery(
+                "SELECT routeFareId, tipo, COUNT(*) AS cantidad, SUM(precio) AS total " +
+                        "FROM boletos_vendidos " +
+                        "WHERE status = 0 " +
+                        "GROUP BY routeFareId, tipo",
+                null
+        );
     }
+
+
+
+
+
 
 
     /*

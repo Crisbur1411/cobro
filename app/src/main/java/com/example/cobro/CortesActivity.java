@@ -20,6 +20,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -360,94 +363,63 @@ public class CortesActivity extends BaseStatusBluetooth {
             return;
         }
 
-
-        // Obtener el número de corte parcial almacenado
         int numeroCorteParcial = obtenerNumeroCorteParcial();
+        StringBuilder contenido = new StringBuilder();
+        String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
+        contenido.append("Corte Parcial #").append(numeroCorteParcial).append("\n")
+                .append("Fecha y Hora: ").append(fechaHora).append("\n\n");
 
-        // Consultar boletos vendidos por tipo desde la base de datos
-        int pasajerosNormal = 0;
-        int pasajerosEstudiante = 0;
-        int pasajerosTercera = 0;
-        double totalNormal = 0;
-        double totalEstudiante = 0;
-        double totalTercera = 0;
-
-        // Consultas y procesamiento de boletos vendidos (como antes)
-        Cursor cursorNormal = dbHelper.obtenerBoletosVendidosPorTipo("Pasaje Normal");
-        if (cursorNormal != null) {
-            while (cursorNormal.moveToNext()) {
-                pasajerosNormal++;
-                totalNormal += cursorNormal.getDouble(cursorNormal.getColumnIndex("precio"));
-            }
-            cursorNormal.close();
+        Cursor cursor = dbHelper.obtenerBoletosVendidosAgrupados();
+        if (cursor == null || cursor.getCount() == 0) {
+            Toast.makeText(this, "No hay boletos para procesar.", Toast.LENGTH_SHORT).show();
+            if (cursor != null) cursor.close();
+            return;
         }
 
-        Cursor cursorEstudiante = dbHelper.obtenerBoletosVendidosPorTipo("Estudiante");
-        if (cursorEstudiante != null) {
-            while (cursorEstudiante.moveToNext()) {
-                pasajerosEstudiante++;
-                totalEstudiante += cursorEstudiante.getDouble(cursorEstudiante.getColumnIndex("precio"));
-            }
-            cursorEstudiante.close();
+        double totalCorte = 0;
+        List<SaleItem> ventas = new ArrayList<>();
+
+        while (cursor.moveToNext()) {
+            int routeFareId = cursor.getInt(cursor.getColumnIndex("routeFareId"));  // 🚨 aquí obtienes el routeFareId
+            String tipo = cursor.getString(cursor.getColumnIndex("tipo"));
+            int cantidad = cursor.getInt(cursor.getColumnIndex("cantidad"));
+            double total = cursor.getDouble(cursor.getColumnIndex("total"));
+
+            contenido.append(tipo)
+                    .append(" (Tarifa ID: ").append(routeFareId).append("): ")
+                    .append(cantidad).append("  |  $").append(total).append("\n");
+
+            ventas.add(new SaleItem(routeFareId, cantidad, (int) (total / cantidad)));  // 🚨 aquí también usas routeFareId
+            totalCorte += total;
         }
+        cursor.close();
 
-        Cursor cursorTercera = dbHelper.obtenerBoletosVendidosPorTipo("Tercera Edad");
-        if (cursorTercera != null) {
-            while (cursorTercera.moveToNext()) {
-                pasajerosTercera++;
-                totalTercera += cursorTercera.getDouble(cursorTercera.getColumnIndex("precio"));
-            }
-            cursorTercera.close();
-        }
 
-        // Validación y guardado del corte parcial (como antes)
-        double totalCorte = totalNormal + totalEstudiante + totalTercera;
-        int status = 0;
+        contenido.append("\nTotal Recaudado: $").append(totalCorte);
 
+        showTextDialog("Corte Parcial #" + numeroCorteParcial, contenido.toString());
+        printTicket(contenido.toString());
+
+        // Guardado en base de datos
         long id = dbHelper.insertarCorteParcial(
                 numeroCorteParcial,
-                pasajerosNormal,
-                pasajerosEstudiante,
-                pasajerosTercera,
-                totalNormal,
-                totalEstudiante,
-                totalTercera,
-                status,
+                0, 0, 0, // puedes ajustar estos si quieres llevar totales específicos, o eliminarlos si ya no aplican
+                0, 0, 0,
+                0, // status
                 totalCorte
         );
 
-        if (id != -1) {
-            StringBuilder contenido = new StringBuilder();
-            String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
-            contenido.append("Corte Parcial #").append(numeroCorteParcial).append("\n")
-                    .append("Fecha y Hora: ").append(fechaHora).append("\n\n")
-                    .append("Pasaje Normal: ").append(pasajerosNormal).append("  |  $").append(totalNormal).append("\n")
-                    .append("Estudiante:    ").append(pasajerosEstudiante).append("  |  $").append(totalEstudiante).append("\n")
-                    .append("Tercera Edad:  ").append(pasajerosTercera).append("  |  $").append(totalTercera).append("\n\n");
-            contenido.append("Total Recaudado: $").append(totalCorte);
-
-            showTextDialog("Corte Parcial #" + numeroCorteParcial, contenido.toString());
-            printTicket(contenido.toString());
-
-            // Incrementar el número de corte parcial y guardarlo
-            numeroCorteParcial++;
-            guardarNumeroCorteParcial(numeroCorteParcial); // Guardar el número actualizado
-
-        } else {
+        if (id == -1) {
             Toast.makeText(this, "Error al guardar el corte parcial", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        List<SaleItem> ventas = new ArrayList<>();
-        if (pasajerosNormal > 0)
-            ventas.add(new SaleItem(1, pasajerosNormal, (int) (totalNormal / pasajerosNormal)));
-        if (pasajerosEstudiante > 0)
-            ventas.add(new SaleItem(2, pasajerosEstudiante, (int) (totalEstudiante / pasajerosEstudiante)));
-        if (pasajerosTercera > 0)
-            ventas.add(new SaleItem(3, pasajerosTercera, (int) (totalTercera / pasajerosTercera)));
+        // Incrementar número de corte parcial
+        numeroCorteParcial++;
+        guardarNumeroCorteParcial(numeroCorteParcial);
 
+        // Enviar al servidor
         String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-
-
         PartialCutRequest corteRequest = new PartialCutRequest(
                 identificador,
                 timestamp,
@@ -455,101 +427,74 @@ public class CortesActivity extends BaseStatusBluetooth {
                 userPhone,
                 ventas
         );
-        //Obtener token mas reciente
+
         String token = TokenManager.getToken(this);
-
-        /*
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonCorte = gson.toJson(corteRequest);
-
-        new AlertDialog.Builder(CortesActivity.this)
-                .setTitle("JSON que se enviará")
-                .setMessage(jsonCorte)
-                .setPositiveButton("OK", null)
-                .show();
-        */
-
-
         if (token != null) {
-            ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
-                @Override
-                public void onResponse(Call<Void> call, Response<Void> response) {
-                    if (response.isSuccessful()) {
-                        Toast.makeText(CortesActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
-                        dbHelper.actualizarEstatusBoletos(1);
-                        dbHelper.actualizarEstatusCortesParcialesParaCorteTotal(1);
+            // Crear JSON para mostrarlo
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String jsonCorte = gson.toJson(corteRequest);
 
-                        int status = 1;
+            // Mostrar JSON en un AlertDialog
+            new AlertDialog.Builder(CortesActivity.this)
+                    .setTitle("JSON que se enviará")
+                    .setMessage(jsonCorte)
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        // Se envía la petición cuando se presiona OK
+                        ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
+                            @Override
+                            public void onResponse(Call<Void> call, Response<Void> response) {
+                                if (response.isSuccessful()) {
+                                    Toast.makeText(CortesActivity.this, "Corte parcial enviado al servidor", Toast.LENGTH_SHORT).show();
+                                    dbHelper.actualizarEstatusBoletos(1);
+                                    dbHelper.actualizarEstatusCortesParcialesParaCorteTotal(1);
 
-                //        StringBuilder resumenGuardado = new StringBuilder();
-                //        resumenGuardado.append("Datos guardados localmente:\n\n");
+                                    int status = 1;
+                                    for (SaleItem venta : ventas) {
+                                        dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
+                                    }
 
-                        for (SaleItem venta : ventas) {
-                            dbHelper.guardarDetalleCorte(userPhone, timestamp, venta.getRoute_fare_id(), venta.getQuantity(), venta.getPrice(), status);
-                            /*
-                            resumenGuardado.append("Usuario: ").append(userPhone).append("\n")
-                                    .append("Fecha: ").append(timestamp).append("\n")
-                                    .append("ID Tarifa: ").append(venta.getRoute_fare_id()).append("\n")
-                                    .append("Cantidad: ").append(venta.getQuantity()).append("\n")
-                                    .append("Status: ").append(status).append("\n\n");
+                                    cargaCortesParciales();
+                                } else if (response.code() == 500) {
+                                    Toast.makeText(CortesActivity.this, "El token ha expirado.", Toast.LENGTH_LONG).show();
+                                    guardarCorteConError(userPhone, timestamp, ventas, 3);
+                                    dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
+                                    dbHelper.actualizarEstatusBoletos(1);
+                                    ParcialTextView.setTextColor(Color.RED);
+                                    ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
+                                    SessionManager.getInstance(CortesActivity.this).showSessionExpiredDialog();
+                                    cargaCortesParciales();
+                                } else {
+                                    Toast.makeText(CortesActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
+                                    guardarCorteConError(userPhone, timestamp, ventas, 3);
+                                    dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
+                                    dbHelper.actualizarEstatusBoletos(1);
+                                    ParcialTextView.setTextColor(Color.RED);
+                                    ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
+                                    cargaCortesParciales();
+                                }
+                            }
 
-                             */
-                        }
+                            @Override
+                            public void onFailure(Call<Void> call, Throwable t) {
+                                Toast.makeText(CortesActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
+                                guardarCorteConError(userPhone, timestamp, ventas, 3);
+                                dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
+                                dbHelper.actualizarEstatusBoletos(1);
+                                ParcialTextView.setTextColor(Color.RED);
+                                ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
+                                cargaCortesParciales();
+                            }
+                        });
+                    })
+                    .show();
 
-                        /*
-                        new AlertDialog.Builder(CortesActivity.this)
-                                .setTitle("Corte Parcial Guardado")
-                                .setMessage(resumenGuardado.toString())
-                                .setPositiveButton("OK", null)
-                                .show();
-
-                         */
-
-                        cargaCortesParciales();
-
-                    } else if (response.code() == 500) {
-                        Toast.makeText(CortesActivity.this, "El token ha expirado.", Toast.LENGTH_LONG).show();
-                        guardarCorteConError(userPhone, timestamp, ventas, 3);
-                        dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
-                        dbHelper.actualizarEstatusBoletos(1);
-
-                        ParcialTextView.setTextColor(Color.RED);
-                        ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
-
-                        SessionManager.getInstance(CortesActivity.this).showSessionExpiredDialog();
-
-                        cargaCortesParciales();
-
-                    } else {
-                        Toast.makeText(CortesActivity.this, "Error al enviar corte: " + response.code(), Toast.LENGTH_SHORT).show();
-                        guardarCorteConError(userPhone, timestamp, ventas, 3);
-                        dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
-                        dbHelper.actualizarEstatusBoletos(1);
-                        ParcialTextView.setTextColor(Color.RED);
-                        ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
-
-                        cargaCortesParciales();
-
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Void> call, Throwable t) {
-                    Toast.makeText(CortesActivity.this, "Fallo de red: Los cortes se enviarán cuando la conexión se restablezca", Toast.LENGTH_SHORT).show();
-                    guardarCorteConError(userPhone, timestamp, ventas, 3);
-                    dbHelper.actualizarEstatusCortesParcialesNoSincronizados(3);
-                    dbHelper.actualizarEstatusBoletos(1);
-                    ParcialTextView.setTextColor(Color.RED);
-                    ParcialiconView.setImageResource(R.drawable.sincronizacion_necesaria);
-
-                    cargaCortesParciales();
-
-                }
-            });
         } else {
-            Toast.makeText(CortesActivity.this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Token no disponible, no se envió al servidor", Toast.LENGTH_SHORT).show();
         }
+
     }
+
+
 
 
     // Guardar el número de corte parcial en SharedPreferences
