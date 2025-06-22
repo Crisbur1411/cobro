@@ -121,7 +121,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         // Cargar cortes parciales, totales y ventas por fecha actual
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        fechaSeleccionada = sdf.format(new Date());
+        fechaSeleccionada = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
 
         // Cargar cortes y ventas con la fecha actual
         cargaCortesTotales();
@@ -332,6 +332,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
 
 
+
     private void cargaCortesTotales() {
         btnTotales.setTextColor(ContextCompat.getColor(this, R.color.white));
         btnParciales.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray));
@@ -379,8 +380,10 @@ public class CortesActivity extends BaseStatusBluetooth {
         double totalCorte = 0;
         List<SaleItem> ventas = new ArrayList<>();
 
+        StringBuilder registroCorteParcial = new StringBuilder();
+
         while (cursor.moveToNext()) {
-            int routeFareId = cursor.getInt(cursor.getColumnIndex("routeFareId"));  // 🚨 aquí obtienes el routeFareId
+            int routeFareId = cursor.getInt(cursor.getColumnIndex("routeFareId"));
             String tipo = cursor.getString(cursor.getColumnIndex("tipo"));
             int cantidad = cursor.getInt(cursor.getColumnIndex("cantidad"));
             double total = cursor.getDouble(cursor.getColumnIndex("total"));
@@ -389,11 +392,28 @@ public class CortesActivity extends BaseStatusBluetooth {
                     .append(" (Tarifa ID: ").append(routeFareId).append("): ")
                     .append(cantidad).append("  |  $").append(total).append("\n");
 
-            ventas.add(new SaleItem(routeFareId, cantidad, (int) (total / cantidad)));  // 🚨 aquí también usas routeFareId
+            ventas.add(new SaleItem(routeFareId, cantidad, (int) (total / cantidad)));
             totalCorte += total;
+
+            // Guardar en detalle_corte_parcial
+            long id = dbHelper.insertarCorteParcialNuevo(numeroCorteParcial,tipo, cantidad, total, fechaHora, 0);
+            if (id == -1) {
+                Toast.makeText(this, "Error al guardar el detalle del corte parcial", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Acumular lo insertado para mostrarlo después
+            registroCorteParcial.append("Guardado: ")
+                    .append("Corte #: ").append(numeroCorteParcial)
+                    .append(", Tipo: ").append(tipo)
+                    .append(", Cantidad: ").append(cantidad)
+                    .append(", Total: $").append(total)
+                    .append(", FechaHora: ").append(fechaHora)
+                    .append("\n");
         }
         cursor.close();
 
+        showTextDialog("Detalles Insertados", registroCorteParcial.toString());
 
         contenido.append("\nTotal Recaudado: $").append(totalCorte);
 
