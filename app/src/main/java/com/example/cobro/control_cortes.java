@@ -624,17 +624,31 @@ public class control_cortes extends SQLiteOpenHelper {
 
 
     //Metodo para obtener todos los cortes parciales y filtrar por fecha para mostrar en la lista
-    public List<CorteTotal> getCortesParcialesPorFecha(String fecha) {
+    public List<CorteTotal> getCortesParcialesPorFecha(String fecha_ddMMyyyy) {
         List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
+        // Convertir de dd/MM/yyyy a yyyy-MM-dd
+        String fecha_yyyyMMdd;
+        try {
+            SimpleDateFormat sdfInput = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            SimpleDateFormat sdfOutput = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date date = sdfInput.parse(fecha_ddMMyyyy);
+            fecha_yyyyMMdd = sdfOutput.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            // Si hay error, usar la fecha tal cual (aunque puede fallar)
+            fecha_yyyyMMdd = fecha_ddMMyyyy;
+        }
+
+        // Consulta por fecha ya formateada
         Cursor cursorCortes = db.rawQuery(
                 "SELECT numero_corte, fechaHora, status " +
                         "FROM cortesParciales " +
                         "WHERE status IN (1, 2, 3) AND fechaHora LIKE ? " +
                         "GROUP BY numero_corte " +
                         "ORDER BY fechaHora DESC",
-                new String[]{fecha + "%"});
+                new String[]{fecha_yyyyMMdd + "%"});
 
         if (cursorCortes.moveToFirst()) {
             do {
@@ -661,8 +675,8 @@ public class control_cortes extends SQLiteOpenHelper {
                         int cantidad = cursorDetalles.getInt(cursorDetalles.getColumnIndexOrThrow("totalCantidad"));
                         double total = cursorDetalles.getDouble(cursorDetalles.getColumnIndexOrThrow("totalRecaudado"));
 
-                        infoBuilder.append(tipo).append(": ").append(cantidad).append(" - $")
-                                .append(String.format("%.2f", total)).append("\n");
+                        infoBuilder.append(tipo).append(": ").append(cantidad)
+                                .append(" - $").append(String.format("%.2f", total)).append("\n");
 
                         totalCorte += total;
 
@@ -682,6 +696,8 @@ public class control_cortes extends SQLiteOpenHelper {
 
         return cortes;
     }
+
+
 
 
 

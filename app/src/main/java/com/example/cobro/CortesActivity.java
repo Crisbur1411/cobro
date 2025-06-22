@@ -366,7 +366,8 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         int numeroCorteParcial = obtenerNumeroCorteParcial();
         StringBuilder contenido = new StringBuilder();
-        String fechaHora = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(new Date());
+        //String fechaHora = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+        String fechaHora = "2025-06-21 20:16:20";
         contenido.append("Corte Parcial #").append(numeroCorteParcial).append("\n")
                 .append("Fecha y Hora: ").append(fechaHora).append("\n\n");
 
