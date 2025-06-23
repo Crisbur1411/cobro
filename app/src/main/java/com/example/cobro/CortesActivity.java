@@ -366,8 +366,7 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         int numeroCorteParcial = obtenerNumeroCorteParcial();
         StringBuilder contenido = new StringBuilder();
-        //String fechaHora = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-        String fechaHora = "2025-06-21 20:16:20";
+        String fechaHora = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
         contenido.append("Corte Parcial #").append(numeroCorteParcial).append("\n")
                 .append("Fecha y Hora: ").append(fechaHora).append("\n\n");
 
@@ -711,71 +710,63 @@ public class CortesActivity extends BaseStatusBluetooth {
 
     //Metodo para hacer corte total
     private void EnvioCorteTotal() {
-        // Llamamos al metodo para reproducir Sonido
         reproducirSonidoClick();
-        //Obtenemos SharedPreferences
-        SharedPreferences sharedPreferences = getSharedPreferences("AppPrefs", MODE_PRIVATE);
 
-        // Verificar si existen cortes parciales pendientes (status = 3)
         if (dbHelper.existenCortesPendientes()) {
             Toast.makeText(this, "❗ Primero sincroniza los cortes parciales pendientes.", Toast.LENGTH_LONG).show();
-            return; // Detiene la ejecución del metodo
+            return;
         }
 
-
-        Cursor cursor = dbHelper.getResumenCortes();
+        Cursor cursor = dbHelper.getResumenCortesParciales();
         if (cursor != null && cursor.moveToFirst()) {
-            int totalPasajerosNormal = cursor.getInt(cursor.getColumnIndex("sumPN"));
-            int totalPasajerosEstudiante = cursor.getInt(cursor.getColumnIndex("sumPE"));
-            int totalPasajerosTercera = cursor.getInt(cursor.getColumnIndex("sumPTE"));
-            double totalNormal = cursor.getDouble(cursor.getColumnIndex("sumTN"));
-            double totalEstudiante = cursor.getDouble(cursor.getColumnIndex("sumTE"));
-            double totalTercera = cursor.getDouble(cursor.getColumnIndex("sumTTE"));
-            cursor.close();
-
-            // Verificación si los valores o ventas estan en cero
-            if (totalPasajerosNormal == 0 && totalPasajerosEstudiante == 0 && totalPasajerosTercera == 0 &&
-                    totalNormal == 0.0 && totalEstudiante == 0.0 && totalTercera == 0.0) {
-                Toast.makeText(this, "❌ No se puede generar el corte total porque no hubo ventas.", Toast.LENGTH_LONG).show();
-                return; // Detiene la ejecución del método
-            }
-
             StringBuilder contenido = new StringBuilder();
             String fechaHora = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-            contenido.append("Corte Total").append("\n")
-                    .append("Fecha y Hora: ").append(fechaHora).append("\n\n")
-                    .append("Pasaje Normal: ").append(totalPasajerosNormal).append("  |  $").append(totalNormal).append("\n")
-                    .append("Estudiante:    ").append(totalPasajerosEstudiante).append("  |  $").append(totalEstudiante).append("\n")
-                    .append("Tercera Edad:  ").append(totalPasajerosTercera).append("  |  $").append(totalTercera).append("\n\n");
-            double totalRecaudado = totalNormal + totalEstudiante + totalTercera;
-            contenido.append("Total Recaudado: $").append(totalRecaudado);
+
+            // Obtener número de corte total actual
+            int numeroCorteTotal = obtenerNumeroCorteTotal();
+
+            // Mostrarlo en el ticket
+            contenido.append("Corte Total No. ").append(numeroCorteTotal).append("\n")
+                    .append("Fecha y Hora: ").append(fechaHora).append("\n\n");
+
+            double totalRecaudado = 0;
+
+            do {
+                String tipo = cursor.getString(cursor.getColumnIndex("tipo"));
+                int totalPasajeros = cursor.getInt(cursor.getColumnIndex("totalPasajeros"));
+                double totalTipo = cursor.getDouble(cursor.getColumnIndex("totalRecaudado"));
+
+                contenido.append(tipo).append(": ").append(totalPasajeros)
+                        .append("  |  $").append(String.format("%.2f", totalTipo)).append("\n");
+
+                totalRecaudado += totalTipo;
+
+                int status = 1;
+                long insertResult = dbHelper.insertarCorteTotalDetalle(
+                        numeroCorteTotal,
+                        fechaHora,
+                        tipo,
+                        totalPasajeros,
+                        totalTipo,
+                        status
+                );
+
+                if (insertResult == -1) {
+                    Toast.makeText(CortesActivity.this, "❌ Error al guardar detalle de " + tipo, Toast.LENGTH_SHORT).show();
+                }
+
+            } while (cursor.moveToNext());
+
+            cursor.close();
+
+            incrementarNumeroCorteTotal();
+
+            contenido.append("\nTotal Recaudado: $").append(String.format("%.2f", totalRecaudado));
 
             showTextDialog("Corte Total", contenido.toString());
 
-            int status = 1;
-            long resultadoInsert = dbHelper.insertarCorteTotal(
-                    "Corte Total",
-                    fechaHora,
-                    totalPasajerosNormal,
-                    totalNormal,
-                    totalPasajerosEstudiante,
-                    totalEstudiante,
-                    totalPasajerosTercera,
-                    totalTercera,
-                    totalRecaudado,
-                    status
-            );
-
-            if (resultadoInsert != -1) {
-                //Toast.makeText(CortesActivity.this, "✅ Corte total guardado correctamente en la base de datos local.", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(CortesActivity.this, "❌ Error al guardar el corte total en la base de datos.", Toast.LENGTH_SHORT).show();
-            }
-
-
-            //Inicio de envio de JSON corte total
+            // Aquí sigue igual tu envío JSON y demás…
             String timestampFinal = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-
             JSONObject finalReportJson = new JSONObject();
             try {
                 finalReportJson.put("device_identifier", identificador);
@@ -783,45 +774,27 @@ public class CortesActivity extends BaseStatusBluetooth {
                 finalReportJson.put("type", "final");
                 finalReportJson.put("user", userPhone);
 
-                // Convertimos la lista de JSONObject en un JSONArray
                 List<JSONObject> cortesParciales = dbHelper.obtenerTodosLosCortesParcialesEstructurado();
                 JSONArray cortesArray = new JSONArray(cortesParciales);
-
                 finalReportJson.put("reports", cortesArray);
 
-                /*
-                // Mostrar en AlertDialog por ejemplo
-                new AlertDialog.Builder(CortesActivity.this)
-                        .setTitle("JSON Final")
-                        .setMessage(finalReportJson.toString(2)) // Pretty print con indentación de 2 espacios
-                        .setPositiveButton("OK", null)
-                        .show();
-
-                 */
-
-                // Aquí convertimos el JSON a RequestBody y lo enviamos
                 RequestBody body = RequestBody.create(
                         MediaType.parse("application/json; charset=utf-8"),
                         finalReportJson.toString()
                 );
-                //Se obtiene el token mas reciente
+
                 String token = TokenManager.getToken(this);
 
-
-                // Enviar al backend si hay token
                 if (token != null) {
                     ApiClient.getApiService().enviarCorteTotal("Bearer " + token, body).enqueue(new Callback<Void>() {
                         @Override
                         public void onResponse(Call<Void> call, Response<Void> response) {
                             if (response.isSuccessful()) {
                                 Toast.makeText(CortesActivity.this, "Corte TOTAL enviado al servidor", Toast.LENGTH_SHORT).show();
-                                // 👇 Cambia estatus a 2 los que se enviaron
                                 dbHelper.actualizarEstatusDetalleCorte(2);
-                                dbHelper.actualizarEstatusCorteTotal(2);   //
+                                dbHelper.actualizarEstatusCorteTotal(2);
                                 dbHelper.actualizarEstatusCortesParcialesAEnviados(2);
                                 cargaCortesTotales();
-
-
                             } else {
                                 Toast.makeText(CortesActivity.this, "Error al enviar corte total: " + response.code(), Toast.LENGTH_SHORT).show();
                                 totalTextView.setTextColor(Color.RED);
@@ -832,9 +805,7 @@ public class CortesActivity extends BaseStatusBluetooth {
                         @Override
                         public void onFailure(Call<Void> call, Throwable t) {
                             Toast.makeText(CortesActivity.this, "Fallo de red. Sincronice el corte total cuando esté conectado a la red.", Toast.LENGTH_SHORT).show();
-
-                            dbHelper.actualizarEstatusCorteTotal(3);   //
-                            // Guarda el JSON para reintento
+                            dbHelper.actualizarEstatusCorteTotal(3);
                             dbHelper.actualizarEstatusDetalleCorte(2);
                             dbHelper.actualizarEstatusCortesParcialesAEnviados(2);
 
@@ -845,7 +816,6 @@ public class CortesActivity extends BaseStatusBluetooth {
                             editor.putString("jsonPendiente", finalReportJson.toString());
                             editor.apply();
                             cargaCortesTotales();
-
                         }
                     });
                 } else {
@@ -858,15 +828,25 @@ public class CortesActivity extends BaseStatusBluetooth {
                 e.printStackTrace();
             }
 
-
             printTicket(contenido.toString());
-        } else {
-            Toast.makeText(this, "No hay cortes registrados en la BD", Toast.LENGTH_SHORT).show();
-        }
-        //dbHelper.borrarCortes(); // Reinicia los cortes
-        //Toast.makeText(this, "Se reiniciaron los cortes parciales para el día.", Toast.LENGTH_SHORT).show();
 
+        } else {
+            Toast.makeText(this, "No hay cortes pendientes para sincronizar", Toast.LENGTH_SHORT).show();
+        }
     }
+
+
+    private int obtenerNumeroCorteTotal() {
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        return prefs.getInt("numero_corte_total", 1);
+    }
+
+    private void incrementarNumeroCorteTotal() {
+        SharedPreferences prefs = getSharedPreferences("AppPrefs", MODE_PRIVATE);
+        int numeroActual = prefs.getInt("numero_corte_total", 1);
+        prefs.edit().putInt("numero_corte_total", numeroActual + 1).apply();
+    }
+
 
 
     private void reenviarCorteTotal(String jsonString) {

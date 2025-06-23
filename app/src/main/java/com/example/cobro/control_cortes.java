@@ -24,7 +24,7 @@ import java.util.Map;
 public class control_cortes extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "control_cortes.db";
-    private static final int DATABASE_VERSION = 20; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
+    private static final int DATABASE_VERSION = 21; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
 
     //Creacion de tabla donde se almacenan los cortes parciales con la informacion de ventas
     private static final String TABLE_CREATE =
@@ -67,16 +67,14 @@ public class control_cortes extends SQLiteOpenHelper {
     private static final String TABLE_CORTE_TOTAL =
             "CREATE TABLE corte_total(" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    "nombre TEXT," +
+                    "numero_corte_total INTEGER," +
                     "fecha_hora TEXT," +
-                    "pasajeros_normal INTEGER," +
-                    "total_normal REAL," +
-                    "pasajeros_estudiante INTEGER," +
-                    "total_estudiante REAL," +
-                    "pasajeros_tercera_edad INTEGER," +
-                    "total_tercera_edad REAL," +
-                    "total_recaudado REAL, " +
+                    "tipo TEXT," +
+                    "cantidad INTEGER," +
+                    "total REAL," +
                     "status INTEGER);";
+
+
 
     // Tabla de boletos vendidos, esta tabla almacena cada uno de los boletos que se han vendido.
     private static final String CREATE_BOLETOS_VENDIDOS =
@@ -191,6 +189,23 @@ public class control_cortes extends SQLiteOpenHelper {
     }
 
 
+    public long insertarCorteTotalDetalle(int numeroCorteTotal, String fechaHora, String tipo, int cantidad, double total, int status) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("numero_corte_total", numeroCorteTotal);
+        values.put("fecha_hora", fechaHora);
+        values.put("tipo", tipo);
+        values.put("cantidad", cantidad);
+        values.put("total", total);
+        values.put("status", status);
+
+        return db.insert("corte_total", null, values);
+    }
+
+
+
+
+
     //Metodo para Guardar detalles del corte parcial, los cuales se usaran en el Json
     public long guardarDetalleCorte(String user, String timestamp, int routeFareId, int quantity, double price, int status) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -240,6 +255,20 @@ public class control_cortes extends SQLiteOpenHelper {
                 "FROM cortes WHERE status = 1";
         return db.rawQuery(query, null);
     }
+
+
+    public Cursor getResumenCortesParciales() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT tipo, " +
+                "SUM(cantidad) AS totalPasajeros, " +
+                "SUM(total) AS totalRecaudado " +
+                "FROM cortesParciales " +
+                "WHERE status = 1 " +
+                "GROUP BY tipo";
+        return db.rawQuery(query, null);
+    }
+
+
 
     /*
      *Metodo para Obtener los boletos individuales por tipo y con estatus 0 para utilizados en el corte parcial
@@ -493,73 +522,138 @@ public class control_cortes extends SQLiteOpenHelper {
     public List<CorteTotal> getCortesTotales() {
         List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM corte_total WHERE status IN (1, 2, 3) ORDER BY fecha_hora DESC", null);
 
-        if (cursor.moveToFirst()) {
+        // Obtener cortes únicos con status 1, 2 o 3
+        Cursor cursorCortes = db.rawQuery(
+                "SELECT numero_corte_total, fecha_hora, status " +
+                        "FROM corte_total " +
+                        "WHERE status IN (1, 2, 3) " +
+                        "GROUP BY numero_corte_total " +
+                        "ORDER BY fecha_hora DESC", null);
+
+        if (cursorCortes.moveToFirst()) {
             do {
-                String nombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre"));
-                String fechaHora = cursor.getString(cursor.getColumnIndexOrThrow("fecha_hora"));
-                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
-                int normal = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_normal"));
-                double totalNormal = cursor.getDouble(cursor.getColumnIndexOrThrow("total_normal"));
-                int estudiante = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_estudiante"));
-                double totalEstudiante = cursor.getDouble(cursor.getColumnIndexOrThrow("total_estudiante"));
-                int terceraEdad = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_tercera_edad"));
-                double totalTercer = cursor.getDouble(cursor.getColumnIndexOrThrow("total_tercera_edad"));
-                double totalRecaudado = cursor.getDouble(cursor.getColumnIndexOrThrow("total_recaudado"));
+                int numeroCorte = cursorCortes.getInt(cursorCortes.getColumnIndexOrThrow("numero_corte_total"));
+                String fechaHora = cursorCortes.getString(cursorCortes.getColumnIndexOrThrow("fecha_hora"));
+                int status = cursorCortes.getInt(cursorCortes.getColumnIndexOrThrow("status"));
 
-                String info = "Fecha y hora: " + fechaHora + "\n" +
-                        "Pasaje Normal: " + normal + " - $" + String.format("%.2f", totalNormal) + "\n" +
-                        "Estudiante: " + estudiante + " - $" + String.format("%.2f", totalEstudiante) + "\n" +
-                        "Tercera Edad: " + terceraEdad + " - $" + String.format("%.2f", totalTercer) + "\n" +
-                        "Total Recaudado: $" + String.format("%.2f", totalRecaudado);
+                String nombre = "Corte Total #" + numeroCorte;
+                StringBuilder infoBuilder = new StringBuilder();
+                infoBuilder.append("Fecha y hora: ").append(fechaHora).append("\n");
 
-                cortes.add(new CorteTotal(nombre, info, status));
-            } while (cursor.moveToNext());
+                double totalCorte = 0;
+
+                // Obtener totales agrupados por tipo para este corte
+                Cursor cursorDetalles = db.rawQuery(
+                        "SELECT tipo, SUM(cantidad) AS totalCantidad, SUM(total) AS totalRecaudado " +
+                                "FROM corte_total " +
+                                "WHERE numero_corte_total = ? AND status IN (1, 2, 3) " +
+                                "GROUP BY tipo",
+                        new String[]{String.valueOf(numeroCorte)});
+
+                if (cursorDetalles.moveToFirst()) {
+                    do {
+                        String tipo = cursorDetalles.getString(cursorDetalles.getColumnIndexOrThrow("tipo"));
+                        int cantidad = cursorDetalles.getInt(cursorDetalles.getColumnIndexOrThrow("totalCantidad"));
+                        double total = cursorDetalles.getDouble(cursorDetalles.getColumnIndexOrThrow("totalRecaudado"));
+
+                        infoBuilder.append(tipo).append(": ").append(cantidad)
+                                .append(" - $").append(String.format("%.2f", total)).append("\n");
+
+                        totalCorte += total;
+
+                    } while (cursorDetalles.moveToNext());
+                }
+                cursorDetalles.close();
+
+                infoBuilder.append("Total Recaudado: $").append(String.format("%.2f", totalCorte));
+
+                cortes.add(new CorteTotal(nombre, infoBuilder.toString(), status));
+
+            } while (cursorCortes.moveToNext());
         }
 
-        cursor.close();
+        cursorCortes.close();
         db.close();
 
         return cortes;
     }
 
+
+
     //Metodo para obtener todos los cortes totales y filtrar por fecha para mostrar en la lista
-    public List<CorteTotal> getCortesPorFecha(String fecha) {
+    public List<CorteTotal> getCortesPorFecha(String fecha_ddMMyyyy) {
         List<CorteTotal> cortes = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Cursor cursor = db.rawQuery("SELECT * FROM corte_total WHERE fecha_hora LIKE ? AND status IN (1, 2, 3) ORDER BY fecha_hora DESC",
-                new String[]{fecha + "%"});
-
-        if (cursor.moveToFirst()) {
-            do {
-                String nombre = cursor.getString(cursor.getColumnIndexOrThrow("nombre"));
-                String fechaHora = cursor.getString(cursor.getColumnIndexOrThrow("fecha_hora"));
-                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
-                int normal = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_normal"));
-                double totalNormal = cursor.getDouble(cursor.getColumnIndexOrThrow("total_normal"));
-                int estudiante = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_estudiante"));
-                double totalEstudiante = cursor.getDouble(cursor.getColumnIndexOrThrow("total_estudiante"));
-                int terceraEdad = cursor.getInt(cursor.getColumnIndexOrThrow("pasajeros_tercera_edad"));
-                double totalTercer = cursor.getDouble(cursor.getColumnIndexOrThrow("total_tercera_edad"));
-                double totalRecaudado = cursor.getDouble(cursor.getColumnIndexOrThrow("total_recaudado"));
-
-                String info = "Fecha y hora: " + fechaHora + "\n" +
-                        "Pasaje Normal: " + normal + " - $" + String.format("%.2f", totalNormal) + "\n" +
-                        "Estudiante: " + estudiante + " - $" + String.format("%.2f", totalEstudiante) + "\n" +
-                        "Tercera Edad: " + terceraEdad + " - $" + String.format("%.2f", totalTercer) + "\n" +
-                        "Total Recaudado: $" + String.format("%.2f", totalRecaudado);
-
-                cortes.add(new CorteTotal(nombre, info, status));
-            } while (cursor.moveToNext());
+        // Convertir de dd/MM/yyyy a yyyy-MM-dd para el LIKE
+        String fecha_yyyyMMdd;
+        try {
+            SimpleDateFormat sdfInput = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+            SimpleDateFormat sdfOutput = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            Date date = sdfInput.parse(fecha_ddMMyyyy);
+            fecha_yyyyMMdd = sdfOutput.format(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+            fecha_yyyyMMdd = fecha_ddMMyyyy; // fallback
         }
 
-        cursor.close();
+        Cursor cursorCortes = db.rawQuery(
+                "SELECT numero_corte_total, fecha_hora, status " +
+                        "FROM corte_total " +
+                        "WHERE status IN (1, 2, 3) AND fecha_hora LIKE ? " +
+                        "GROUP BY numero_corte_total " +
+                        "ORDER BY fecha_hora DESC",
+                new String[]{fecha_yyyyMMdd + "%"});
+
+        if (cursorCortes.moveToFirst()) {
+            do {
+                int numeroCorte = cursorCortes.getInt(cursorCortes.getColumnIndexOrThrow("numero_corte_total"));
+                String fechaHora = cursorCortes.getString(cursorCortes.getColumnIndexOrThrow("fecha_hora"));
+                int status = cursorCortes.getInt(cursorCortes.getColumnIndexOrThrow("status"));
+
+                String nombre = "Corte Total #" + numeroCorte;
+                StringBuilder infoBuilder = new StringBuilder();
+                infoBuilder.append("Fecha y hora: ").append(fechaHora).append("\n");
+
+                double totalCorte = 0;
+
+                Cursor cursorDetalles = db.rawQuery(
+                        "SELECT tipo, SUM(cantidad) AS totalCantidad, SUM(total) AS totalRecaudado " +
+                                "FROM corte_total " +
+                                "WHERE numero_corte_total = ? AND status IN (1, 2, 3) " +
+                                "GROUP BY tipo",
+                        new String[]{String.valueOf(numeroCorte)});
+
+                if (cursorDetalles.moveToFirst()) {
+                    do {
+                        String tipo = cursorDetalles.getString(cursorDetalles.getColumnIndexOrThrow("tipo"));
+                        int cantidad = cursorDetalles.getInt(cursorDetalles.getColumnIndexOrThrow("totalCantidad"));
+                        double total = cursorDetalles.getDouble(cursorDetalles.getColumnIndexOrThrow("totalRecaudado"));
+
+                        infoBuilder.append(tipo).append(": ").append(cantidad)
+                                .append(" - $").append(String.format("%.2f", total)).append("\n");
+
+                        totalCorte += total;
+
+                    } while (cursorDetalles.moveToNext());
+                }
+                cursorDetalles.close();
+
+                infoBuilder.append("Total Recaudado: $").append(String.format("%.2f", totalCorte));
+
+                cortes.add(new CorteTotal(nombre, infoBuilder.toString(), status));
+
+            } while (cursorCortes.moveToNext());
+        }
+
+        cursorCortes.close();
         db.close();
 
         return cortes;
     }
+
+
 
     //Metodo para obtener todos los cortes parciales y mostrarlos en la lista
     public List<CorteTotal> getCortesParciales() {
