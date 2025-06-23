@@ -420,19 +420,7 @@ public class CortesActivity extends BaseStatusBluetooth {
         showTextDialog("Corte Parcial #" + numeroCorteParcial, contenido.toString());
         printTicket(contenido.toString());
 
-        // Guardado en base de datos
-        long id = dbHelper.insertarCorteParcial(
-                numeroCorteParcial,
-                0, 0, 0, // puedes ajustar estos si quieres llevar totales específicos, o eliminarlos si ya no aplican
-                0, 0, 0,
-                0, // status
-                totalCorte
-        );
-
-        if (id == -1) {
-            Toast.makeText(this, "Error al guardar el corte parcial", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        // El bloque de guardado en base de datos con valores fijos se eliminó.
 
         // Incrementar número de corte parcial
         numeroCorteParcial++;
@@ -450,16 +438,13 @@ public class CortesActivity extends BaseStatusBluetooth {
 
         String token = TokenManager.getToken(this);
         if (token != null) {
-            // Crear JSON para mostrarlo
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String jsonCorte = gson.toJson(corteRequest);
 
-            // Mostrar JSON en un AlertDialog
             new AlertDialog.Builder(CortesActivity.this)
                     .setTitle("JSON que se enviará")
                     .setMessage(jsonCorte)
                     .setPositiveButton("OK", (dialog, which) -> {
-                        // Se envía la petición cuando se presiona OK
                         ApiClient.getApiService().enviarCorteParcial("Bearer " + token, corteRequest).enqueue(new Callback<Void>() {
                             @Override
                             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -513,8 +498,6 @@ public class CortesActivity extends BaseStatusBluetooth {
         }
 
     }
-
-
 
 
     // Guardar el número de corte parcial en SharedPreferences

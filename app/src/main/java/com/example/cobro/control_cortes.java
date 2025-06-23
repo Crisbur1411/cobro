@@ -27,19 +27,6 @@ public class control_cortes extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 21; // Version de la base de datos, se debe aumentar una version cada vez que hay una actualizacion en el archivo
 
     //Creacion de tabla donde se almacenan los cortes parciales con la informacion de ventas
-    private static final String TABLE_CREATE =
-            "CREATE TABLE cortes (" +
-                    "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "numero_corte INTEGER, " +
-                    "pasajeros_normal INTEGER, " +
-                    "pasajeros_estudiante INTEGER, " +
-                    "pasajeros_tercera_edad INTEGER, " +
-                    "total_normal REAL, " +
-                    "total_estudiante REAL, " +
-                    "total_tercera_edad REAL, " +
-                    "fecha_hora TEXT, " +
-                    "status INTEGER, " +
-                    "totalCorte REAL);";
 
     private static final String TABLE_CREATE_PARCIALES =
             "CREATE TABLE cortesParciales (" +
@@ -96,7 +83,6 @@ public class control_cortes extends SQLiteOpenHelper {
     // Se inicialzan las tablas
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(TABLE_CREATE);
         db.execSQL(TABLE_CREATE_CORTE_DETALLE);
         db.execSQL(TABLE_CORTE_TOTAL);
         db.execSQL(CREATE_BOLETOS_VENDIDOS);
@@ -107,7 +93,6 @@ public class control_cortes extends SQLiteOpenHelper {
     // Gestiona las actualizaciones del esquema de la base de datos local
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS cortes");
         db.execSQL("DROP TABLE IF EXISTS DetalleCorteParcial");
         db.execSQL("DROP TABLE IF EXISTS corte_total");
         db.execSQL("DROP TABLE IF EXISTS boletos_vendidos");
@@ -116,7 +101,9 @@ public class control_cortes extends SQLiteOpenHelper {
     }
 
 
+    // Metodos para insertar cortes parciales, totales y boletos individuales-------------------------------
 
+    //Metodo para Insertar un corte parcial en la base de datos.
     public long insertarCorteParcialNuevo(int numeroCorte, String tipo, int cantidad, double total, String fechaHora, int status) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -130,65 +117,7 @@ public class control_cortes extends SQLiteOpenHelper {
         return db.insert("cortesParciales", null, values);
     }
 
-    // Metodos para insertar cortes parciales, totales y boletos individuales-------------------------------
-
-    //Metodo para Insertas un corte parcial en la base de datos.
-    public long insertarCorteParcial(int numeroCorte,
-                                     int pasajerosNormal,
-                                     int pasajerosEstudiante,
-                                     int pasajerosTerceraEdad,
-                                     double totalNormal,
-                                     double totalEstudiante,
-                                     double totalTerceraEdad,
-                                     int status,
-                                     double totalCorte) {
-
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-
-        values.put("numero_corte", numeroCorte);
-        values.put("pasajeros_normal", pasajerosNormal);
-        values.put("pasajeros_estudiante", pasajerosEstudiante);
-        values.put("pasajeros_tercera_edad", pasajerosTerceraEdad);
-        values.put("total_normal", totalNormal);
-        values.put("total_estudiante", totalEstudiante);
-        values.put("total_tercera_edad", totalTerceraEdad);
-        values.put("status", status);
-        values.put("totalCorte", totalCorte);
-
-        // Fecha/hora actual
-        String fechaHora = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
-        values.put("fecha_hora", fechaHora);
-
-        long result = db.insert("cortes", null, values);
-        db.close();
-        return result;
-    }
-
-    // Metodo para Insertas la informacion del corte total
-    public long insertarCorteTotal(String nombre, String fechaHora, int pasajerosNormal, double totalNormal,
-                                   int pasajerosEstudiante, double totalEstudiante,
-                                   int pasajerosTerceraEdad, double totalTerceraEdad,
-                                   double totalRecaudado, int status) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("nombre", nombre);
-        values.put("fecha_hora", fechaHora);
-        values.put("pasajeros_normal", pasajerosNormal);
-        values.put("total_normal", totalNormal);
-        values.put("pasajeros_estudiante", pasajerosEstudiante);
-        values.put("total_estudiante", totalEstudiante);
-        values.put("pasajeros_tercera_edad", pasajerosTerceraEdad);
-        values.put("total_tercera_edad", totalTerceraEdad);
-        values.put("total_recaudado", totalRecaudado);
-        values.put("status", status);
-
-        long resultado = db.insert("corte_total", null, values);
-        db.close();
-        return resultado;
-    }
-
-
+    //Metodo para Insertar un corte total en la base de datos.
     public long insertarCorteTotalDetalle(int numeroCorteTotal, String fechaHora, String tipo, int cantidad, double total, int status) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -243,20 +172,6 @@ public class control_cortes extends SQLiteOpenHelper {
      */
 
     //Metodo que Devuelve la suma de todos los cortes (parciales) registrados con status 1 de sincronizados.
-    public Cursor getResumenCortes() {
-        SQLiteDatabase db = this.getReadableDatabase();
-        String query = "SELECT " +
-                "SUM(pasajeros_normal) AS sumPN, " +
-                "SUM(pasajeros_estudiante) AS sumPE, " +
-                "SUM(pasajeros_tercera_edad) AS sumPTE, " +
-                "SUM(total_normal) AS sumTN, " +
-                "SUM(total_estudiante) AS sumTE, " +
-                "SUM(total_tercera_edad) AS sumTTE " +
-                "FROM cortes WHERE status = 1";
-        return db.rawQuery(query, null);
-    }
-
-
     public Cursor getResumenCortesParciales() {
         SQLiteDatabase db = this.getReadableDatabase();
         String query = "SELECT tipo, " +
@@ -267,7 +182,6 @@ public class control_cortes extends SQLiteOpenHelper {
                 "GROUP BY tipo";
         return db.rawQuery(query, null);
     }
-
 
 
     /*
@@ -285,12 +199,6 @@ public class control_cortes extends SQLiteOpenHelper {
                 null
         );
     }
-
-
-
-
-
-
 
     /*
      *Obtener todos los cortes parciales de la tabla de DetalleCorteParcial con status 1
@@ -875,7 +783,7 @@ public class control_cortes extends SQLiteOpenHelper {
     //Metodo para detectar si existen cortes parciales pendientes para no permitir generar el corte total
     public boolean existenCortesPendientes() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT id FROM cortes WHERE status = 3 LIMIT 1", null);
+        Cursor cursor = db.rawQuery("SELECT id FROM cortesParciales WHERE status = 3 LIMIT 1", null);
         boolean existenPendientes = (cursor != null && cursor.moveToFirst());
         if (cursor != null) cursor.close();
         return existenPendientes;
