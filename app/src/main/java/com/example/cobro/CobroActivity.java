@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -54,10 +55,6 @@ public class CobroActivity extends BaseStatusBluetooth {
     private Map<String, TarifaControl> tarifasPorTipo;
     private Map<String, Integer> tarifaIdsPorTipo = new HashMap<>();
 
-    private int[] coloresTarifas;
-
-
-
 
     private LinearLayout layoutTarifas; //Layout para mostrar tarifas
     private control_cortes dbHelper; // Instancia de la clase que maneja la BD para cortes parciales
@@ -70,6 +67,9 @@ public class CobroActivity extends BaseStatusBluetooth {
 
     private int numeroTransaccion; //Inicializa el numero de transaccion en 1
 
+    private List<Integer> coloresTarifas;
+
+
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -78,7 +78,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         setContentView(R.layout.activity_cobro);
 
         //Se crea arreglo para colores de tarifas
-        coloresTarifas = new int[]{
+        coloresTarifas = Arrays.asList(
                 ContextCompat.getColor(this, R.color.colorTarifa1),
                 ContextCompat.getColor(this, R.color.colorTarifa2),
                 ContextCompat.getColor(this, R.color.colorTarifa3),
@@ -86,7 +86,8 @@ public class CobroActivity extends BaseStatusBluetooth {
                 ContextCompat.getColor(this, R.color.colorTarifa5),
                 ContextCompat.getColor(this, R.color.colorTarifa6),
                 ContextCompat.getColor(this, R.color.colorTarifa7)
-        };
+        );
+
 
 
         //Navegacion de secciones
@@ -238,10 +239,17 @@ public class CobroActivity extends BaseStatusBluetooth {
                                 }
 
                                 // Ahora sí, agregar las cards
+                                int colorIndex = 0;
                                 for (Map.Entry<String, TarifaControl> entry : tarifasPorTipo.entrySet()) {
                                     String passengerType = entry.getKey();
                                     TarifaControl control = entry.getValue();
-                                    agregarBotonTarifa(passengerType, control);
+                                    agregarBotonTarifa(passengerType, control, coloresTarifas.get(colorIndex));
+
+                                    colorIndex++;
+                                    // Si quieres que se repitan colores si hay más de 7:
+                                    if (colorIndex >= coloresTarifas.size()) {
+                                        colorIndex = 0;
+                                    }
                                 }
 
                             } else {
@@ -290,7 +298,7 @@ public class CobroActivity extends BaseStatusBluetooth {
     }
 
 
-    private void agregarBotonTarifa(String passengerType, TarifaControl control) {
+    private void agregarBotonTarifa(String passengerType, TarifaControl control, int colorFondo) {
         LayoutInflater inflater = LayoutInflater.from(this);
         View vistaTarifa = inflater.inflate(R.layout.card_tarifa, null);
 
@@ -306,7 +314,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         btnMenosTarifa.setBackgroundTintList(null);
 
         LinearLayout cardTarifa = vistaTarifa.findViewById(R.id.cardTarifa);
-
+        cardTarifa.setBackgroundColor(colorFondo);
         // Asignar nombre y precio inicial
         txtNombreTarifa.setText(passengerType);
         txtPrecioTarifa.setText("$" + String.format(Locale.US, "%.2f", control.precioActual));
