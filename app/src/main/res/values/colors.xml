@@ -13,14 +13,18 @@
     <color name="teal_700">#2DA765</color>
     <color name="gray">#888888</color>
 
-    <color name="colorNormal">#3F51B5</color>       <!-- Azul -->
-    <color name="colorEstudiante">#4CAF50</color>    <!-- Verde -->
-    <color name="colorTerceraEdad">#FF9800</color>   <!-- Naranja -->
+    <color name="colorTarifa1">#007BCD</color> <!-- Azul medio vibrante -->
+    <color name="colorTarifa2">#C05000</color> <!-- Naranja quemado -->
+    <color name="colorTarifa3">#522708</color> <!-- Marrón oscuro -->
+    <color name="colorTarifa4">#00214D</color> <!-- Azul marino oscuro -->
+    <color name="colorTarifa5">#008375</color> <!-- Verde azulado medio -->
+    <color name="colorTarifa6">#AF005F</color> <!-- Magenta oscuro -->
+    <color name="colorTarifa7">#7A3E00</color> <!-- Cobre oscuro -->
     <color name="colorPlusMinus">#9C27B0</color>     <!-- Púrpura -->
     <color name="purple_500">#6200EE</color> <!-- Color normal del botón -->
     <color name="purple_700">#3700B3</color> <!-- Color al presionar -->
     <color name="fondo_cajon">#fcfff2</color> <!-- Color para fondos de datos -->
     <color name="fondo_menu">#9ca1a8</color>
-    9ca1a8
+
 
 </resources>

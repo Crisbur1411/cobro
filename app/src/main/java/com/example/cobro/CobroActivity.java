@@ -20,6 +20,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.gson.Gson;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
@@ -52,6 +54,7 @@ public class CobroActivity extends BaseStatusBluetooth {
     private Map<String, TarifaControl> tarifasPorTipo;
     private Map<String, Integer> tarifaIdsPorTipo = new HashMap<>();
 
+    private int[] coloresTarifas;
 
 
 
@@ -74,6 +77,16 @@ public class CobroActivity extends BaseStatusBluetooth {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cobro);
 
+        //Se crea arreglo para colores de tarifas
+        coloresTarifas = new int[]{
+                ContextCompat.getColor(this, R.color.colorTarifa1),
+                ContextCompat.getColor(this, R.color.colorTarifa2),
+                ContextCompat.getColor(this, R.color.colorTarifa3),
+                ContextCompat.getColor(this, R.color.colorTarifa4),
+                ContextCompat.getColor(this, R.color.colorTarifa5),
+                ContextCompat.getColor(this, R.color.colorTarifa6),
+                ContextCompat.getColor(this, R.color.colorTarifa7)
+        };
 
 
         //Navegacion de secciones
@@ -285,7 +298,13 @@ public class CobroActivity extends BaseStatusBluetooth {
         TextView txtPrecioTarifa = vistaTarifa.findViewById(R.id.txtPrecioTarifa);
         ImageView iconTarifa = vistaTarifa.findViewById(R.id.iconTarifa);
         Button btnMasTarifa = vistaTarifa.findViewById(R.id.btnMasTarifa);
+        btnMasTarifa.setBackgroundResource(R.drawable.mas);
+        btnMasTarifa.setBackgroundTintList(null);
+
         Button btnMenosTarifa = vistaTarifa.findViewById(R.id.btnMenosTarifa);
+        btnMenosTarifa.setBackgroundResource(R.drawable.menos);
+        btnMenosTarifa.setBackgroundTintList(null);
+
         LinearLayout cardTarifa = vistaTarifa.findViewById(R.id.cardTarifa);
 
         // Asignar nombre y precio inicial
@@ -318,7 +337,6 @@ public class CobroActivity extends BaseStatusBluetooth {
             });
         }
 
-        // Ahora sí: clic en todo el card genera ticket, venta y sonido
         cardTarifa.setOnClickListener(v -> {
             reproducirSonidoClick();
             int routeFareId = tarifaIdsPorTipo.get(passengerType);
@@ -328,9 +346,8 @@ public class CobroActivity extends BaseStatusBluetooth {
         });
 
 
-        // Margen inferior programado opcional
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         params.setMargins(0, 0, 0, 16); // separador de 16dp abajo
         vistaTarifa.setLayoutParams(params);
