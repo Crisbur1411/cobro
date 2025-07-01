@@ -322,7 +322,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         // Ícono según tipo
         Integer iconoRes = iconosTarifas.get(passengerType);
         if (iconoRes == null) {
-            iconoRes = R.drawable.persona;
+            iconoRes = R.drawable.cash;
         }
         iconTarifa.setImageResource(iconoRes);
 
@@ -357,7 +357,7 @@ public class CobroActivity extends BaseStatusBluetooth {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.setMargins(0, 0, 0, 16); // separador de 16dp abajo
+        params.setMargins(0, 0, 0, 80); // separador
         vistaTarifa.setLayoutParams(params);
 
         layoutTarifas.addView(vistaTarifa);
